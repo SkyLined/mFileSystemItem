@@ -904,7 +904,7 @@ class cFileSystemItem(cWithDebugOutput):
     try:
       sRelativePath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors);
       try:
-        oSelf.__oPyZipFile.writestr(sRelativePath, sData);
+        oSelf.__oPyZipFile.writestr(sRelativePath, sData, zipfile.ZIP_DEFLATED);
       except:
         if bThrowErrors:
           raise;

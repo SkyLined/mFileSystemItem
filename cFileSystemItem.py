@@ -273,7 +273,7 @@ class cFileSystemItem(cWithDebugOutput):
         except Exception as oException:
           if bThrowErrors:
             raise;
-        return oSelf.fxExitFunctionOutput(False, "Exception: %s" % repr(oException));
+          return oSelf.fxExitFunctionOutput(False, "Exception: %s" % repr(oException));
       return oSelf.fxExitFunctionOutput(True, "folder created");
     except Exception as oException:
       oSelf.fxRaiseExceptionOutput(oException);

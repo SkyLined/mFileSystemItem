@@ -532,7 +532,7 @@ class cFileSystemItem(cWithDebugOutput):
           return oSelf.fxExitFunctionOutput(False, "Cannot open file in zip file");
       else:
         try:
-          oSelf.__oPyFile = open(oSelf.sWindowsPath, "wb" if bWritable else "rb");
+          oSelf.__oPyFile = open(oSelf.sWindowsPath, "a+b" if bWritable else "rb");
         except Exception as oException:
           if bThrowErrors:
             raise;
@@ -665,13 +665,13 @@ class cFileSystemItem(cWithDebugOutput):
       if not oSelf.__oPyFile: return False;
     else:
       try:
-        oSelf.__oPyFile = open(oSelf.sWindowsPath, "wb" if bWritable else "rb");
+        oSelf.__oPyFile = open(oSelf.sWindowsPath, "a+b" if bWritable else "rb");
       except:
         if bThrowErrors:
           raise;
         return False;
     try:
-      oSelf.__oPyZipFile = zipfile.ZipFile(oSelf.__oPyFile, "w" if bWritable else "r", zipfile.ZIP_DEFLATED);
+      oSelf.__oPyZipFile = zipfile.ZipFile(oSelf.__oPyFile, "a" if bWritable else "r", zipfile.ZIP_DEFLATED);
       oSelf.__asPyZipFileInternalPaths = None;
     except:
       if oZipRoot:
@@ -924,17 +924,18 @@ class cFileSystemItem(cWithDebugOutput):
       bZipFileMustBeClosed = True;
       assert oSelf.fbOpenAsZipFile(bWritable = True, bThrowErrors = bThrowErrors), \
           "Cannot check if %s contains a file %s if it cannot be opened!" % (oSelf.sPath, sPath);
+    sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
+    assert sZipInternalPath not in oSelf.__ZipFile_asZipInternalPaths, \
+        "Cannot create/overwrite existing file %s in zip file %s!" % (sPath, oSelf.sPath);
     try:
-      sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
       try:
         oSelf.__oPyZipFile.writestr(sZipInternalPath, sData, zipfile.ZIP_DEFLATED);
       except:
         if bThrowErrors:
           raise;
         return None;
-      # Update the cached list of file names if needed
-      if sZipInternalPath not in oSelf.__asPyZipFileInternalPaths:
-        oSelf.__asPyZipFileInternalPaths.append(sZipInternalPath);
+      # Update the cached list of file names
+      oSelf.__ZipFile_asZipInternalPaths.append(sZipInternalPath);
       if bKeepOpen:
         oPyFile = StringIO(sData);
         oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath] = oPyFile;
@@ -973,17 +974,19 @@ class cFileSystemItem(cWithDebugOutput):
   
   def __ZipFile_fbClosePyFile(oSelf, sPath, oPyFile, bThrowErrors):
     sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
-    assert sZipInternalPath in oSelf.__doPyFile_by_sZipInternalPath \
-        and sZipInternalPath in oSelf.__dbWritable_by_sZipInternalPath, \
-        "Cannot close file %s in zip file %s if it is not open!" % (sPath, oSelf.sPath);
-    assert oPyFile == oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath], \
-        "Internal inconsistency!";
     bWritable = oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath];
     if bWritable:
       bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
       if bMustBeClosed:
         assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
             "Cannot get files list of zip file %s if it cannot be opened!" % oSelf.sPath;
+      assert sZipInternalPath not in oSelf.__ZipFile_asZipInternalPaths, \
+          "Cannot create/overwrite existing file %s in zip file %s!" % (sPath, oSelf.sPath);
+      assert sZipInternalPath in oSelf.__doPyFile_by_sZipInternalPath \
+          and sZipInternalPath in oSelf.__dbWritable_by_sZipInternalPath, \
+          "Cannot close file %s in zip file %s if it is not open!" % (sPath, oSelf.sPath);
+      assert oPyFile == oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath], \
+          "Internal inconsistency!";
       try:
         # We assume writable files have been modifed and need to be saved in the zip file.
         try:
@@ -994,8 +997,7 @@ class cFileSystemItem(cWithDebugOutput):
           if bThrowErrors:
             raise;
           return False;
-        if sZipInternalPath not in oSelf.__ZipFile_asZipInternalPaths:
-          oSelf.__ZipFile_asZipInternalPaths.append(sZipInternalPath);
+        oSelf.__ZipFile_asZipInternalPaths.append(sZipInternalPath);
       finally:
         if bMustBeClosed:
           assert oSelf.fbClose(bThrowErrors = bThrowErrors), \

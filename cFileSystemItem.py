@@ -514,7 +514,7 @@ class cFileSystemItem(cWithDebugOutput):
       oSelf.fxRaiseExceptionOutput(oException);
       raise;
   
-  def fbOpenAsFile(oSelf, bWritable = False, bParseZipFiles = False, bThrowErrors = False):
+  def fbOpenAsFile(oSelf, bWritable = False, bAppend = False, bParseZipFiles = False, bThrowErrors = False):
     oSelf.fEnterFunctionOutput(bWritable = bWritable, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
     try:
       assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
@@ -532,7 +532,7 @@ class cFileSystemItem(cWithDebugOutput):
           return oSelf.fxExitFunctionOutput(False, "Cannot open file in zip file");
       else:
         try:
-          oSelf.__oPyFile = open(oSelf.sWindowsPath, "a+b" if bWritable else "rb");
+          oSelf.__oPyFile = open(oSelf.sWindowsPath, ("a+b" if bAppend else "wb") if bWritable else "rb");
         except Exception as oException:
           if bThrowErrors:
             raise;
@@ -544,7 +544,7 @@ class cFileSystemItem(cWithDebugOutput):
       raise;
   
   def fsRead(oSelf, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
-    # Not that we assume that the caller wants us to parse zip files, unlike most other functions!
+    # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
     oSelf.fEnterFunctionOutput(bKeepOpen = bKeepOpen, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
     try:
       assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
@@ -573,7 +573,7 @@ class cFileSystemItem(cWithDebugOutput):
       raise;
   
   def fbWrite(oSelf, sData, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
-    # Not that we assume that the caller wants us to parse zip files, unlike most other functions!
+    # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
     oSelf.fEnterFunctionOutput(sData = sData, bKeepOpen = bKeepOpen, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
     try:
       assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \

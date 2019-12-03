@@ -694,6 +694,20 @@ class cFileSystemItem(cWithDebugOutput):
         "Cannot create %s %s when it is already open as a file!" % (sCreateAsType, oSelf.sPath);
     assert not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot create %s %s when it already exists as a file!" % (sCreateAsType, oSelf.sPath);
+    if not bIsZipFile and bParseZipFiles:
+      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      if oZipRoot:
+        # Folders cannot be stored within a zip file; only files can be stored with a relative
+        # path that contain folder names. So, if we are asked to create a parent folder it must
+        # be for such a file that has this parent folder in its path. This means no action is
+        # needed: the folder will magically exists once the file is created. Except that we do
+        # need to create the zip file that contains this folder if it does not exists. If the
+        # file exists, we should check it already exists:
+        if not oZipRoot.bExists(bParseZipFiles = True, bThrowErrors = bThrowErrors):
+          return oZipRoot.fbCreateAsZipFile(bCreateParents = True, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
+        assert oZipRoot.fbIsValidZipFile(bParseZipFiles = True, bThrowErrors = bThrowErrors), \
+            "Cannot create folder %s when %s is not a valid zip file!" % (oSelf.sPath, oZipRoot.sPath);
+        return True;
     assert not oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot create %s %s when it already exists as a folder!" % (sCreateAsType, oSelf.sPath);
     assert not oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \

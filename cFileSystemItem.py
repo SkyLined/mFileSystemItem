@@ -659,7 +659,7 @@ class cFileSystemItem(cWithDebugOutput):
         "Cannot open zip file %s if it does not exist!" % oSelf.sPath;
     assert oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot open zip file %s when it is not a file!" % oSelf.sPath;
-    oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+    oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWriteable, bThrowErrors);
       if not oSelf.__oPyFile: return False;

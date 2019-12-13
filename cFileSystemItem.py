@@ -712,6 +712,8 @@ class cFileSystemItem(cWithDebugOutput):
         "Cannot create %s %s when it already exists as a folder!" % (sCreateAsType, oSelf.sPath);
     assert not oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot create %s %s if it already exists!" % (sCreateAsType, oSelf.sPath);
+    assert oSelf.oParent, \
+        "Cannot create %s %s as it is a root node!" % (sCreateAsType, oSelf.sPath);
     if not oSelf.oParent.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors) \
         and not oSelf.oParent.fbCreateAsParent(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
       return False;

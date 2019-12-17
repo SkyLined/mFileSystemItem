@@ -12,6 +12,8 @@ def fsGetNormalizedPath(sPath, sBasePath = None):
           "Cannot normalize absolute path %s" % repr(sPath);
       sNormalizedPath = "";
     return sBase + sNormalizedPath;
+  if not sPath:
+    sPath = os.getcwdu();
   sOriginalPath = sPath;
   if not isinstance(sPath, unicode):
     sPath = unicode(sPath, "cp437");

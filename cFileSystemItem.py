@@ -4,7 +4,7 @@ from cStringIO import StringIO;
 from mDebugOutput import cWithDebugOutput;
 
 class cFileSystemItem(cWithDebugOutput):
-  def __init__(oSelf, sPath, oParent = None):
+  def __init__(oSelf, sPath = None, oParent = None):
     oSelf.fEnterFunctionOutput();
     try:
       oSelf.sPath = fsGetNormalizedPath(sPath, oParent.sPath if oParent else None);

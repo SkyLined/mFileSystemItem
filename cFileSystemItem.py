@@ -304,7 +304,7 @@ class cFileSystemItem(cWithDebugOutput):
           except:
             if bThrowErrors:
               raise;
-            return oSelf.fxExitFunctionOutput(None, "canot list folder");
+            return oSelf.fxExitFunctionOutput(None, "cannot list folder");
         elif bParseZipFiles and oSelf.fbIsValidZipFile(bThrowErrors = bThrowErrors):
           asChildNames = oSelf.__ZipFile_fasGetChildNames(oSelf.sPath, bThrowErrors);
         else:

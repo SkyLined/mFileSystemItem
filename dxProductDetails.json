@@ -2,7 +2,7 @@
   "asDependentOnProductNames": [
     "mWindowsSDK"
   ], 
-  "oProductVersion": "2020-01-09 10:58", 
+  "oProductVersion": "2020-06-16 08:44", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "cFileSystemItem", 

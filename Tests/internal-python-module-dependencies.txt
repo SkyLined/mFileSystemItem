@@ -3,19 +3,13 @@ bz2
 collections
 cStringIO
 ctypes
-dis
 fnmatch
 gc
 heapq
-imp
-inspect
 io
 itertools
 keyword
-mDebugOutput
 msvcrt
-oConsole
-opcode
 platform
 shutil
 string
@@ -25,7 +19,5 @@ subprocess
 thread
 threading
 time
-token
-tokenize
 zipfile
 zlib

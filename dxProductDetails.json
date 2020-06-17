@@ -3,16 +3,18 @@
     "mWindowsSDK"
   ], 
   "asOptionalProductNames": [
-    "mDebugOutput",
+    "mDebugOutput", 
     "oConsole"
-  ],
-  "oProductVersion": "2020-06-17 08:54", 
+  ], 
+  "oProductVersion": "2020-06-17 16:51", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "cFileSystemItem", 
     "sType": "GitHub", 
     "sUserName": "SkyLined"
   }, 
+  "oTrialPeriodDuration": null, 
+  "sLicenseServerURL": null, 
   "sProductAuthor": "SkyLined", 
   "sProductName": "cFileSystemItem", 
   "sProductURL": "https://github.com/SkyLined/cFileSystemItem"

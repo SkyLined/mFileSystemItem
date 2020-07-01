@@ -600,9 +600,6 @@ class cFileSystemItem(object):
       oSelf.__oPyZipFile = zipfile.ZipFile(oSelf.__oPyFile, "w");
       oSelf.__asPyZipFileInternalPaths = [];
     except:
-      if oZipRoot:
-        assert oZipRoot.__ZipFile_fbClosePyFile(oSelf.sPath, oSelf.__oPyFile, bThrowErrors), \
-            "Cannot close zip file %s in zip file %s" % (oSelf.sPath, oZipRoot.sPath);
       assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
           "Cannot close %s!" % oSelf.sPath;
       if bThrowErrors:
@@ -929,7 +926,9 @@ class cFileSystemItem(object):
       # Update the cached list of file names
       oSelf.__ZipFile_asZipInternalPaths.append(sZipInternalPath);
       if bKeepOpen:
-        oPyFile = StringIO(sData);
+        oPyFile = StringIO();
+        oPyFile.write(sData);
+        oPyFile.seek(0);
         oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath] = oPyFile;
         oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath] = bWritable;
         return oPyFile;
@@ -950,11 +949,13 @@ class cFileSystemItem(object):
     try:
       if sZipInternalPath in oSelf.__ZipFile_asZipInternalPaths:
         sData = oSelf.__oPyZipFile.read(sZipInternalPath);
-        oPyFile = StringIO(sData);
+        oPyFile = StringIO();
+        oPyFile.write(sData);
+        oPyFile.seek(0);
       else:
         assert bWritable, \
             "Cannot open file %s in zip file %s for reading if it does not exist!" % (sPath, oSelf.sPath);
-        oPyFile = StringIO("");
+        oPyFile = StringIO();
       oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath] = oPyFile;
       oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath] = bWritable;
       return oPyFile;

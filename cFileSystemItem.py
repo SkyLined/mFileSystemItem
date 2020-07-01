@@ -584,7 +584,7 @@ class cFileSystemItem(object):
         return False;
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
-      oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWriteable = True, bThrowErrors = bThrowErrors);
+      oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable = True, bThrowErrors = bThrowErrors);
       if not oSelf.__oPyFile: return False;
     else:
       # Open/create the file as writable and truncate it if it already existed.
@@ -594,7 +594,7 @@ class cFileSystemItem(object):
         if bThrowErrors:
           raise;
         return False;
-    oSelf.__bWriteable = True;
+    oSelf.__bWritable = True;
     try:
       oSelf.__oPyFile.write("");
       oSelf.__oPyZipFile = zipfile.ZipFile(oSelf.__oPyFile, "w");
@@ -626,7 +626,7 @@ class cFileSystemItem(object):
         "Cannot open zip file %s when it is not a file!" % oSelf.sPath;
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
-      oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWriteable, bThrowErrors);
+      oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable, bThrowErrors);
       if not oSelf.__oPyFile: return False;
     else:
       try:
@@ -952,7 +952,7 @@ class cFileSystemItem(object):
         sData = oSelf.__oPyZipFile.read(sZipInternalPath);
         oPyFile = StringIO(sData);
       else:
-        assert bWriteable, \
+        assert bWritable, \
             "Cannot open file %s in zip file %s for reading if it does not exist!" % (sPath, oSelf.sPath);
         oPyFile = StringIO("");
       oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath] = oPyFile;

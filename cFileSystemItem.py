@@ -85,6 +85,9 @@ class cFileSystemItem(object):
     fShowDebugOutput("ancestor");
     return oZipRoot
   
+  def oZipRoot(oSelf):
+    return oSelf.__foGetZipRoot();
+  
   def __del__(oSelf):
     try:
       oSelf.__oPyZipFile.close();

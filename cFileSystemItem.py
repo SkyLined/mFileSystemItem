@@ -36,7 +36,7 @@ class cFileSystemItem(object):
     oSelf.__bParentSet = oParent is not None;
     oSelf.__oPyFile = None;
     oSelf.__oPyZipFile = None;
-    oSelf.__asPyZipFileInternalPaths = None;
+    oSelf.__doPyZipInfo_by_sZipInternalPath = {};
     oSelf.__doPyFile_by_sZipInternalPath = {};
     oSelf.__dbWritable_by_sZipInternalPath = {};
     oSelf.__bWritable = False;
@@ -138,6 +138,25 @@ class cFileSystemItem(object):
         oSelf.__sDOSPath = fs0GetDOSPath(oSelf.sPath);
       oSelf.__bDOSPathSet = True;
     return oSelf.__sDOSPath;
+  
+  def fuGetSize(oSelf, bParseZipFiles = False, bThrowErrors = False):
+    if bParseZipFiles:
+      oZipRoot = oSelf.oZipRoot;
+      if oZipRoot:
+        fShowDebugOutput("zip file");
+        return oZipRoot.__ZipFile_fuGetSize(oSelf.sPath, bThrowErrors);
+    try:
+      return os.path.getsize(oSelf.sWindowsPath);
+    except Exception as oException:
+      if bThrowErrors:
+        raise;
+      return None;
+  
+  def fuGetCompressedSize(oSelf, bThrowErrors = False): # bParseZipFiles == True is implied
+    oZipRoot = oSelf.oZipRoot;
+    assert oZipRoot, \
+        "Th file %s is not compressed" % oSelf.sPath;
+    return oZipRoot.__ZipFile_fuGetCompressedSize(oSelf.sPath, bThrowErrors);
   
   @ShowDebugOutput
   def fbExists(oSelf, bParseZipFiles = False, bThrowErrors = False):
@@ -601,7 +620,7 @@ class cFileSystemItem(object):
     try:
       oSelf.__oPyFile.write("");
       oSelf.__oPyZipFile = zipfile.ZipFile(oSelf.__oPyFile, "w");
-      oSelf.__asPyZipFileInternalPaths = [];
+      oSelf.__doPyZipInfo_by_sZipInternalPath = {};
     except:
       assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
           "Cannot close %s!" % oSelf.sPath;
@@ -637,7 +656,7 @@ class cFileSystemItem(object):
         return False;
     try:
       oSelf.__oPyZipFile = zipfile.ZipFile(oSelf.__oPyFile, "a" if bWritable else "r", zipfile.ZIP_DEFLATED);
-      oSelf.__asPyZipFileInternalPaths = None;
+      oSelf.__doPyZipInfo_by_sZipInternalPath = None;
     except:
       if oZipRoot:
         assert oZipRoot.__ZipFile_fbClosePyFile(oSelf.sPath, oSelf.__oPyFile, bThrowErrors), \
@@ -707,7 +726,7 @@ class cFileSystemItem(object):
           raise;
         return False;
       oSelf.__oPyZipFile = None;
-      oSelf.__asPyZipFileInternalPaths = None;
+      oSelf.__doPyZipInfo_by_sZipInternalPath = None;
     if oSelf.__oPyFile:
       oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
       if oZipRoot:
@@ -857,10 +876,13 @@ class cFileSystemItem(object):
     return oDescendant;
   
   @property
-  def __ZipFile_asZipInternalPaths(oSelf):
-    if oSelf.__asPyZipFileInternalPaths is None:
-      oSelf.__asPyZipFileInternalPaths = oSelf.__oPyZipFile.namelist();
-    return oSelf.__asPyZipFileInternalPaths;
+  def __ZipFile_doPyZipInfo_by_sZipInternalPath(oSelf):
+    if oSelf.__doPyZipInfo_by_sZipInternalPath is None:
+      oSelf.__doPyZipInfo_by_sZipInternalPath = dict([
+        (oPyZipInfo.filename, oPyZipInfo)
+        for oPyZipInfo in oSelf.__oPyZipFile.infolist()
+      ]);
+    return oSelf.__doPyZipInfo_by_sZipInternalPath;
     
   def __ZipFile_fbContains(oSelf, sPath, bThrowErrors):
     bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
@@ -869,7 +891,7 @@ class cFileSystemItem(object):
           "Cannot check if %s contains %s if it cannot be opened!" % (oSelf.sPath, sPath);
     try:
       sWantedZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
-      for sZipInternalPath in oSelf.__ZipFile_asZipInternalPaths:
+      for sZipInternalPath in oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath.keys():
         if (
           sZipInternalPath.startswith(sWantedZipInternalPath)
           and sZipInternalPath[len(sWantedZipInternalPath):len(sWantedZipInternalPath) + 1] in ["", os.sep]
@@ -888,7 +910,7 @@ class cFileSystemItem(object):
           "Cannot check if %s contains a folder %s if it cannot be opened!" % (oSelf.sPath, sPath);
     try:
       sWantedZipInternalPathHeader = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/") + "/";
-      for sZipInternalPath in oSelf.__ZipFile_asZipInternalPaths:
+      for sZipInternalPath in oSelf.__doPyZipInfo_by_sZipInternalPath.keys():
         if sZipInternalPath.startswith(sWantedZipInternalPathHeader):
           return True;
       return False;
@@ -903,8 +925,8 @@ class cFileSystemItem(object):
       assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
           "Cannot check if %s contains a file %s if it cannot be opened!" % (oSelf.sPath, sPath);
     try:
-      sWantedZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
-      return sWantedZipInternalPath in oSelf.__ZipFile_asZipInternalPaths;
+      sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
+      return sZipInternalPath in oSelf.__doPyZipInfo_by_sZipInternalPath.keys();
     finally:
       if bMustBeClosed:
         assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
@@ -917,7 +939,7 @@ class cFileSystemItem(object):
       assert oSelf.fbOpenAsZipFile(bWritable = True, bThrowErrors = bThrowErrors), \
           "Cannot check if %s contains a file %s if it cannot be opened!" % (oSelf.sPath, sPath);
     sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
-    assert sZipInternalPath not in oSelf.__ZipFile_asZipInternalPaths, \
+    assert sZipInternalPath not in oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath, \
         "Cannot create/overwrite existing file %s in zip file %s!" % (sPath, oSelf.sPath);
     try:
       try:
@@ -926,8 +948,8 @@ class cFileSystemItem(object):
         if bThrowErrors:
           raise;
         return None;
-      # Update the cached list of file names
-      oSelf.__ZipFile_asZipInternalPaths.append(sZipInternalPath);
+      # Update the cached list of ZipInfo objects by file name
+      oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath[sZipInternalPath] = oSelf.__oPyZipFile.getinfo(sZipInternalPath);
       if bKeepOpen:
         oPyFile = StringIO();
         oPyFile.write(sData);
@@ -950,7 +972,7 @@ class cFileSystemItem(object):
       assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
           "Cannot get files list of zip file %s if it cannot be opened!" % oSelf.sPath;
     try:
-      if sZipInternalPath in oSelf.__ZipFile_asZipInternalPaths:
+      if sZipInternalPath in oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath:
         sData = oSelf.__oPyZipFile.read(sZipInternalPath);
         oPyFile = StringIO();
         oPyFile.write(sData);
@@ -976,7 +998,7 @@ class cFileSystemItem(object):
       if bMustBeClosed:
         assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
             "Cannot get files list of zip file %s if it cannot be opened!" % oSelf.sPath;
-      assert sZipInternalPath not in oSelf.__ZipFile_asZipInternalPaths, \
+      assert sZipInternalPath not in oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath, \
           "Cannot create/overwrite existing file %s in zip file %s!" % (sPath, oSelf.sPath);
       assert sZipInternalPath in oSelf.__doPyFile_by_sZipInternalPath \
           and sZipInternalPath in oSelf.__dbWritable_by_sZipInternalPath, \
@@ -993,7 +1015,7 @@ class cFileSystemItem(object):
           if bThrowErrors:
             raise;
           return False;
-        oSelf.__ZipFile_asZipInternalPaths.append(sZipInternalPath);
+        oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath[sZipInternalPath] = oSelf.__oPyZipFile.getinfo(sZipInternalPath);
       finally:
         if bMustBeClosed:
           assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
@@ -1014,7 +1036,7 @@ class cFileSystemItem(object):
       );
       uMinLength = len(sWantedZipInternalPathHeader); # Used to speed things up
       asChildNames = [];
-      for sZipInternalPath in oSelf.__ZipFile_asZipInternalPaths:
+      for sZipInternalPath in oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath.keys():
         if len(sZipInternalPath) > uMinLength and sZipInternalPath.startswith(sWantedZipInternalPathHeader):
           sZipInternalRelativePath = sZipInternalPath[len(sWantedZipInternalPathHeader):];
           sChildName = sZipInternalRelativePath.split("/", 1)[0];
@@ -1025,7 +1047,40 @@ class cFileSystemItem(object):
       if bMustBeClosed:
         assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
             "Cannot close zip file %s!" % oSelf.sPath;
+   
+  def __ZipFile_fuGetSize(oSelf, sPath, bThrowErrors):
+    sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
+    if oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath]:
+      # If it is open for writing, we're always writing at the end of the file.
+      # Since `tell()` returns the offet from the start of the file where writing will happen, it returns the number
+      # of bytes in the file:
+      oPyFile = oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath];
+      return oPyFile.tell();
+    oPyZipInfo = oSelf.__ZipFile_foGetZipInfo(sPath, bThrowErrors);
+    return oPyZipInfo.file_size;
   
+  def __ZipFile_fuGetCompressedSize(oSelf, sPath, bThrowErrors):
+    sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
+    assert not oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath], \
+        "Cannot get compressed sized of a file that is open for writing; please close it first!";
+    oPyZipInfo = oSelf.__ZipFile_foGetZipInfo(sPath, bThrowErrors);
+    return oPyZipInfo.compress_size;
+  
+  def __ZipFile_foGetZipInfo(oSelf, sPath, bThrowErrors):
+    bMustBeClosed = not not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
+    if bMustBeClosed:
+      assert oSelf.fbOpenAsZipFile(bWritable = False, bThrowErrors = bThrowErrors), \
+          "Cannot check if %s contains a file %s if it cannot be opened!" % (oSelf.sPath, sPath);
+    try:
+      sZipInternalPath = oSelf.fsGetRelativePathTo(sPath, bThrowErrors = bThrowErrors).replace(os.altsep, "/").replace(os.sep, "/");
+      assert sZipInternalPath in oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath, \
+          "Cannot get file size for non-existing file %s in zip file %s!" % (sPath, oSelf.sPath);
+      return oSelf.__doPyZipInfo_by_sZipInternalPath[sZipInternalPath];
+    finally:
+      if bMustBeClosed:
+        assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
+            "Cannot close %s" % oSelf.sPath;
+      
   def __repr__(oSelf):
     return "<%s %s #%d>" % (oSelf.__class__.__name__, oSelf, id(oSelf));
   def fsToString(oSelf):

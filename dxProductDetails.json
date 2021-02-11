@@ -1,4 +1,6 @@
 {
+  "asProductTypes": ["Python module"],
+  "sPythonModuleName": "cFileSystemItem",
   "asDependentOnProductNames": [
     "mWindowsSDK"
   ], 

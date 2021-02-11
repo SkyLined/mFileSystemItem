@@ -1,4 +1,4 @@
-from fsGetWindowsPath import fsGetWindowsPath;
+from .fsGetWindowsPath import fsGetWindowsPath;
 
 from mWindowsSDK import *;
 

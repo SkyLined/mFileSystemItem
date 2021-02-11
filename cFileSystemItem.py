@@ -1,4 +1,5 @@
 import os, re, zipfile;
+from cStringIO import StringIO;
 
 try: # mDebugOutput use is Optional
   from mDebugOutput import *;
@@ -10,8 +11,9 @@ except: # Do nothing if not available.
   fEnableAllDebugOutput = lambda: None;
   cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
 
+from .fs0GetDOSPath import fs0GetDOSPath;
 from .fsGetNormalizedPath import fsGetNormalizedPath;
-from cStringIO import StringIO;
+from .fsGetWindowsPath import fsGetWindowsPath;
 
 class cFileSystemItem(object):
   @ShowDebugOutput
@@ -1087,7 +1089,4 @@ class cFileSystemItem(object):
     return "%s{%s#%d}" % (oSelf.__class__.__name__, oSelf.sPath, id(oSelf));
   def __str__(oSelf):
     return oSelf.sPath;
-
-from .fsGetWindowsPath import fsGetWindowsPath;
-from .fs0GetDOSPath import fs0GetDOSPath;
 

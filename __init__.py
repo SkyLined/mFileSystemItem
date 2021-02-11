@@ -1,1 +1,1 @@
-from cFileSystemItem import cFileSystemItem;
+from .cFileSystemItem import cFileSystemItem;

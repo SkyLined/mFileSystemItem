@@ -87,6 +87,7 @@ class cFileSystemItem(object):
     fShowDebugOutput("ancestor");
     return oZipRoot
   
+  @property
   def oZipRoot(oSelf):
     return oSelf.__foGetZipRoot();
   
@@ -485,7 +486,7 @@ class cFileSystemItem(object):
     else:
       if not oSelf.oParent.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
         assert bCreateParents, \
-            "Cannot create folder %s when its parent does not exist!" % oSelf.sPath;
+            "Cannot create file %s when its parent does not exist!" % oSelf.sPath;
         if not oSelf.oParent.fbCreateAsParent(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
           fShowDebugOutput("Cannot create parent");
           return False;

@@ -1,14 +1,18 @@
 {
-  "asProductTypes": ["Python module"],
-  "sPythonModuleName": "cFileSystemItem",
   "asDependentOnProductNames": [
     "mWindowsSDK"
   ], 
+  "asJavaScriptModuleNames": [], 
   "asOptionalProductNames": [
     "mDebugOutput", 
     "oConsole"
   ], 
-  "oProductVersion": "2020-07-01 22:38", 
+  "asPHPModuleNames": [], 
+  "asProductTypes": [
+    "Python module"
+  ], 
+  "asPythonApplicationNames": [], 
+  "oProductVersion": "2021-03-01 09:12", 
   "oRepository": {
     "sBranch": "master", 
     "sRepositoryName": "cFileSystemItem", 
@@ -19,5 +23,6 @@
   "sLicenseServerURL": null, 
   "sProductAuthor": "SkyLined", 
   "sProductName": "cFileSystemItem", 
-  "sProductURL": "https://github.com/SkyLined/cFileSystemItem"
+  "sProductURL": "https://github.com/SkyLined/cFileSystemItem", 
+  "sPythonModuleName": "cFileSystemItem"
 }

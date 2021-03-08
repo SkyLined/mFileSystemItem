@@ -15,7 +15,80 @@ from .fs0GetDOSPath import fs0GetDOSPath;
 from .fsGetNormalizedPath import fsGetNormalizedPath;
 from .fsGetWindowsPath import fsGetWindowsPath;
 
+gdsInvalidPathCharacterNormalTranslationMap = {
+  # Translates characters that are not valid in file/folder names to a visually similar unicode character.
+  u'"':     u"''",     # Double APOSTROPHY
+  u"<":     u"[",      # LEFT SQUARE BRACKET
+  u">":     u"]",      # RIGHT SQUARE BRACKET
+  u"\\":    u" ",      # SPACE
+  u"/":     u" ",      # SPACE
+  u"?":     u"!",      # EXCLAMATION MARK
+  u"*":     u"x",      # LATIN SMALL LETTER X
+  u":":     u".",      # FULL STOP
+  u"|":     u"!",      # EXCLAMATION MARK
+};
+gdsInvalidPathCharacterUnicodeHomographTranslationMap = {
+  # Translates characters that are not valid in file/folder names to a visually similar unicode character.
+  u'\x00':  u".",      # 
+  u'\x01':  u"\u263A", # ,- Assume cp437
+  u'\x02':  u"\u263B", # |
+  u'\x03':  u"\u2665", # |
+  u'\x04':  u"\u2666", # |
+  u'\x05':  u"\u2663", # |
+  u'\x06':  u"\u2660", # |
+  u'\x07':  u"\u2022", # |
+  u'\x08':  u"\u25D8", # |
+  u'\x09':  u"\u25CB", # |
+  u'\x0A':  u"\u25D9", # |
+  u'\x0B':  u"\u2642", # |
+  u'\x0C':  u"\u2640", # |
+  u'\x0D':  u"\u266A", # |
+  u'\x0E':  u"\u266B", # |
+  u'\x0F':  u"\u263C", # |
+  u'\x10':  u"\u25BA", # |
+  u'\x11':  u"\u25C4", # |
+  u'\x12':  u"\u2195", # |
+  u'\x13':  u"\u203C", # |
+  u'\x14':  u"\u00B6", # |
+  u'\x15':  u"\u00A7", # |
+  u'\x16':  u"\u25AC", # |
+  u'\x17':  u"\u21A8", # |
+  u'\x18':  u"\u2191", # |
+  u'\x19':  u"\u2193", # |
+  u'\x1A':  u"\u2192", # |
+  u'\x1B':  u"\u2190", # |
+  u'\x1C':  u"\u221F", # |
+  u'\x1D':  u"\u2194", # |
+  u'\x1E':  u"\u25B2", # |
+  u'\x1F':  u"\u25BC", # `-
+  u'"':     u"\u2033", # DOUBLE PRIME
+  u"<":     u"\u3008", # LEFT ANGLE BRACKET
+  u">":     u"\u3009", # RIGHT ANGLE BRACKET
+  u"\\":    u"\u29F9", # BIG REVERSE SOLIDUS
+  u"/":     u"\u29F8", # BIG SOLIDUS
+  u"?":     u"\u2753", # BLACK QUESTION MARK ORNAMENT
+  u"*":     u"\u204E", # LOWER ASTERISK
+  u":":     u"\u0589", # ARMENIAN FULL STOP
+  u"|":     u"\u01C0", # LATIN LETTER DENTAL CLICK
+};
+for uCharCode in xrange(0, 0x20):
+  # Translate control codes
+  gdsInvalidPathCharacterNormalTranslationMap[unichr(uCharCode)] = u"."; # FULL STOP
+
 class cFileSystemItem(object):
+  @staticmethod
+  def fsGetValidName(sName, bUseUnicodeHomographs = True):
+    # Convert a string with arbitrary characters (potentially including characters that are not valid in file system
+    # items, such as ':' and '/') into a string that looks similar but does not contain any such invalid characters.
+    # Be default similar looking Unicode characters are used as replacement where possible. This can be deisabled by
+    # specifying `bUseUnicodeHomographs = False`.
+    dsInvalidPathCharacterTranslationMap = gdsInvalidPathCharacterNormalTranslationMap if bUseUnicodeHomographs else \
+                                           gdsInvalidPathCharacterUnicodeHomographTranslationMap;
+    return u"".join([
+      (bUseUnicodeHomographs or ord(sChar) < 0x100) and dsInvalidPathCharacterTranslationMap.get(sChar, sChar) or "."
+      for sChar in unicode(sName)
+    ]);
+  
   @ShowDebugOutput
   def __init__(oSelf, sPath = None, oParent = None):
     oSelf.sPath = fsGetNormalizedPath(sPath, oParent.sPath if oParent else None);

@@ -1,1 +1,4 @@
-from .cFileSystemItem import cFileSystemItem;
+from .fInitializeProduct import fInitializeProduct;
+fInitializeProduct();
+
+from .mExports import *;

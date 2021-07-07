@@ -1,15 +1,14 @@
 import os, re, zipfile;
-from cStringIO import StringIO;
+from io import BytesIO;
 
 try: # mDebugOutput use is Optional
-  from mDebugOutput import *;
-except: # Do nothing if not available.
-  ShowDebugOutput = lambda fxFunction: fxFunction;
-  fShowDebugOutput = lambda sMessage: None;
-  fEnableDebugOutputForModule = lambda mModule: None;
-  fEnableDebugOutputForClass = lambda cClass: None;
-  fEnableAllDebugOutput = lambda: None;
-  cCallStack = fTerminateWithException = fTerminateWithConsoleOutput = None;
+  from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
+except ModuleNotFoundError as oException:
+  if oException.args[0] != "No module named 'mDebugOutput'":
+    raise;
+  ShowDebugOutput = fShowDebugOutput = lambda x: x; # NOP
+
+from mNotProvided import *;
 
 from .fs0GetDOSPath import fs0GetDOSPath;
 from .fsGetNormalizedPath import fsGetNormalizedPath;
@@ -17,65 +16,66 @@ from .fsGetWindowsPath import fsGetWindowsPath;
 
 gdsInvalidPathCharacterNormalTranslationMap = {
   # Translates characters that are not valid in file/folder names to a visually similar unicode character.
-  u'"':     u"''",     # Double APOSTROPHY
-  u"<":     u"[",      # LEFT SQUARE BRACKET
-  u">":     u"]",      # RIGHT SQUARE BRACKET
-  u"\\":    u" ",      # SPACE
-  u"/":     u" ",      # SPACE
-  u"?":     u"!",      # EXCLAMATION MARK
-  u"*":     u"x",      # LATIN SMALL LETTER X
-  u":":     u".",      # FULL STOP
-  u"|":     u"!",      # EXCLAMATION MARK
+  '"':     "''",     # Double APOSTROPHY
+  "<":     "[",      # LEFT SQUARE BRACKET
+  ">":     "]",      # RIGHT SQUARE BRACKET
+  "\\":    " ",      # SPACE
+  "/":     " ",      # SPACE
+  "?":     "!",      # EXCLAMATION MARK
+  "*":     "x",      # LATIN SMALL LETTER X
+  ":":     ".",      # FULL STOP
+  "|":     "!",      # EXCLAMATION MARK
 };
 gdsInvalidPathCharacterUnicodeHomographTranslationMap = {
   # Translates characters that are not valid in file/folder names to a visually similar unicode character.
-  u'\x00':  u".",      # 
-  u'\x01':  u"\u263A", # ,- Assume cp437
-  u'\x02':  u"\u263B", # |
-  u'\x03':  u"\u2665", # |
-  u'\x04':  u"\u2666", # |
-  u'\x05':  u"\u2663", # |
-  u'\x06':  u"\u2660", # |
-  u'\x07':  u"\u2022", # |
-  u'\x08':  u"\u25D8", # |
-  u'\x09':  u"\u25CB", # |
-  u'\x0A':  u"\u25D9", # |
-  u'\x0B':  u"\u2642", # |
-  u'\x0C':  u"\u2640", # |
-  u'\x0D':  u"\u266A", # |
-  u'\x0E':  u"\u266B", # |
-  u'\x0F':  u"\u263C", # |
-  u'\x10':  u"\u25BA", # |
-  u'\x11':  u"\u25C4", # |
-  u'\x12':  u"\u2195", # |
-  u'\x13':  u"\u203C", # |
-  u'\x14':  u"\u00B6", # |
-  u'\x15':  u"\u00A7", # |
-  u'\x16':  u"\u25AC", # |
-  u'\x17':  u"\u21A8", # |
-  u'\x18':  u"\u2191", # |
-  u'\x19':  u"\u2193", # |
-  u'\x1A':  u"\u2192", # |
-  u'\x1B':  u"\u2190", # |
-  u'\x1C':  u"\u221F", # |
-  u'\x1D':  u"\u2194", # |
-  u'\x1E':  u"\u25B2", # |
-  u'\x1F':  u"\u25BC", # `-
-  u'"':     u"\u2033", # DOUBLE PRIME
-  u"<":     u"\u3008", # LEFT ANGLE BRACKET
-  u">":     u"\u3009", # RIGHT ANGLE BRACKET
-  u"\\":    u"\u29F9", # BIG REVERSE SOLIDUS
-  u"/":     u"\u29F8", # BIG SOLIDUS
-  u"?":     u"\u2753", # BLACK QUESTION MARK ORNAMENT
-  u"*":     u"\u204E", # LOWER ASTERISK
-  u":":     u"\u0589", # ARMENIAN FULL STOP
-  u"|":     u"\u01C0", # LATIN LETTER DENTAL CLICK
+  '\x00':  ".",      # 
+  '\x01':  "\u263A", # ,- Assume cp437
+  '\x02':  "\u263B", # |
+  '\x03':  "\u2665", # |
+  '\x04':  "\u2666", # |
+  '\x05':  "\u2663", # |
+  '\x06':  "\u2660", # |
+  '\x07':  "\u2022", # |
+  '\x08':  "\u25D8", # |
+  '\x09':  "\u25CB", # |
+  '\x0A':  "\u25D9", # |
+  '\x0B':  "\u2642", # |
+  '\x0C':  "\u2640", # |
+  '\x0D':  "\u266A", # |
+  '\x0E':  "\u266B", # |
+  '\x0F':  "\u263C", # |
+  '\x10':  "\u25BA", # |
+  '\x11':  "\u25C4", # |
+  '\x12':  "\u2195", # |
+  '\x13':  "\u203C", # |
+  '\x14':  "\u00B6", # |
+  '\x15':  "\u00A7", # |
+  '\x16':  "\u25AC", # |
+  '\x17':  "\u21A8", # |
+  '\x18':  "\u2191", # |
+  '\x19':  "\u2193", # |
+  '\x1A':  "\u2192", # |
+  '\x1B':  "\u2190", # |
+  '\x1C':  "\u221F", # |
+  '\x1D':  "\u2194", # |
+  '\x1E':  "\u25B2", # |
+  '\x1F':  "\u25BC", # `-
+  '"':     "\u2033", # DOUBLE PRIME
+  "<":     "\u3008", # LEFT ANGLE BRACKET
+  ">":     "\u3009", # RIGHT ANGLE BRACKET
+  "\\":    "\u29F9", # BIG REVERSE SOLIDUS
+  "/":     "\u29F8", # BIG SOLIDUS
+  "?":     "\u2753", # BLACK QUESTION MARK ORNAMENT
+  "*":     "\u204E", # LOWER ASTERISK
+  ":":     "\u0589", # ARMENIAN FULL STOP
+  "|":     "\u01C0", # LATIN LETTER DENTAL CLICK
 };
-for uCharCode in xrange(0, 0x20):
+for uCharCode in range(0, 0x20):
   # Translate control codes
-  gdsInvalidPathCharacterNormalTranslationMap[unichr(uCharCode)] = u"."; # FULL STOP
+  gdsInvalidPathCharacterNormalTranslationMap[chr(uCharCode)] = "."; # FULL STOP
 
 class cFileSystemItem(object):
+  bSupportsZipFiles = True; # To allow code that may use this or another implementation to detect if .zip files are supported
   @staticmethod
   def fsGetValidName(sName, bUseUnicodeHomographs = True):
     # Convert a string with arbitrary characters (potentially including characters that are not valid in file system
@@ -84,16 +84,16 @@ class cFileSystemItem(object):
     # specifying `bUseUnicodeHomographs = False`.
     dsInvalidPathCharacterTranslationMap = gdsInvalidPathCharacterNormalTranslationMap if bUseUnicodeHomographs else \
                                            gdsInvalidPathCharacterUnicodeHomographTranslationMap;
-    return u"".join([
+    return "".join([
       (bUseUnicodeHomographs or ord(sChar) < 0x100) and dsInvalidPathCharacterTranslationMap.get(sChar, sChar) or "."
-      for sChar in unicode(sName)
+      for sChar in str(sName)
     ]);
   
   @ShowDebugOutput
   def __init__(oSelf, sPath = None, oParent = None):
     oSelf.sPath = fsGetNormalizedPath(sPath, oParent.sPath if oParent else None);
     if oParent:
-      sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + u"..");
+      sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");
       assert sParentPath == oParent.sPath, \
           "Cannot create a child (path = %s, normalized = %s, parent = %s) for the given parent (path %s)" % \
           (repr(sPath), repr(oSelf.sPath), repr(sParentPath), repr(oParent.sPath));
@@ -121,12 +121,12 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def oParent(oSelf):
     if not oSelf.__bParentSet:
-      sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + u"..");
+      sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");
       # This will be None for root nodes, where sParentPath == its own path.
       oSelf.__oParent = oSelf.__class__(sParentPath) if sParentPath != oSelf.sPath else None;
       assert oSelf.__oParent is None or sParentPath == oSelf.__oParent.sPath, \
           "Cannot create a parent (path = %s, normalized = %s) for path %s: result is %s" % \
-          (repr(oSelf.sPath + os.sep + u".."), repr(sParentPath), repr(oSelf.sPath), repr(oSelf.__oParent.sPath));
+          (repr(oSelf.sPath + os.sep + ".."), repr(sParentPath), repr(oSelf.sPath), repr(oSelf.__oParent.sPath));
       oSelf.__bParentSet = True;
     return oSelf.__oParent;
   
@@ -174,7 +174,7 @@ class cFileSystemItem(object):
     except Exception:
       pass;
     try:
-      asZipFileOpenWritableInternalPaths = oSelf.__dbWritable_by_sZipInternalPath.keys();
+      asZipFileOpenWritableInternalPaths = list(oSelf.__dbWritable_by_sZipInternalPath.keys());
     except Exception:
       pass;
     else:
@@ -535,7 +535,7 @@ class cFileSystemItem(object):
     return bSuccess;
   
   @ShowDebugOutput
-  def fbCreateAsFile(oSelf, sData = "", bCreateParents = False, bParseZipFiles = False, bKeepOpen = False, bThrowErrors = False):
+  def fbCreateAsFile(oSelf, sbData = "", bCreateParents = False, bParseZipFiles = False, bKeepOpen = False, bThrowErrors = False):
     assert oSelf.oParent, \
         "Cannot create file %s as a root node!" % oSelf.sPath;
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
@@ -548,7 +548,7 @@ class cFileSystemItem(object):
         "Cannot create file %s if it already exists!" % oSelf.sPath;
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
-      oSelf.__oPyFile = oZipRoot.__ZipFile_foCreateFile(oSelf.sPath, sData, bKeepOpen, bThrowErrors);
+      oSelf.__oPyFile = oZipRoot.__ZipFile_foCreateFile(oSelf.sPath, sbData, bKeepOpen, bThrowErrors);
       if not oSelf.__oPyFile:
         fShowDebugOutput("Cannot create file in zip file");
         return False;
@@ -567,7 +567,7 @@ class cFileSystemItem(object):
         oSelf.__oPyFile = open(oSelf.sWindowsPath, "wb");
         oSelf.__bWritable = True;
         try:
-          oSelf.__oPyFile.write(sData);
+          oSelf.__oPyFile.write(sbData);
         finally:
           if not bKeepOpen:
             oSelf.__oPyFile.close();
@@ -608,7 +608,7 @@ class cFileSystemItem(object):
     return True;
   
   @ShowDebugOutput
-  def fsRead(oSelf, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
+  def fsbRead(oSelf, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
     # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
         "Cannot read file %s when it is open as a zip file!" % oSelf.sPath;
@@ -622,7 +622,7 @@ class cFileSystemItem(object):
         fShowDebugOutput("cannot open file");
         return None;
     try:
-      sData = oSelf.__oPyFile.read();
+      sbData = oSelf.__oPyFile.read();
     except Exception as oException:
       if bThrowErrors:
         raise;
@@ -632,10 +632,10 @@ class cFileSystemItem(object):
       if not bKeepOpen:
         assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
             "Cannot close %s after reading!" % oSelf.sPath;
-    return sData;
+    return sbData;
   
   @ShowDebugOutput
-  def fbWrite(oSelf, sData, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
+  def fbWrite(oSelf, sbData, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
     # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
         "Cannot write file %s when it is open as a zip file!" % oSelf.sPath;
@@ -645,7 +645,7 @@ class cFileSystemItem(object):
     # Make sure the file is open and writable
     if not bIsOpen:
       if not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        if not oSelf.fbCreateAsFile(sData, bKeepOpen = bKeepOpen, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
+        if not oSelf.fbCreateAsFile(sbData, bKeepOpen = bKeepOpen, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
           fShowDebugOutput("cannot create file");
           return False;
         return True;
@@ -653,7 +653,7 @@ class cFileSystemItem(object):
         fShowDebugOutput("cannot open file");
         return False;
     try:
-      oSelf.__oPyFile.write(sData);
+      oSelf.__oPyFile.write(sbData);
     except Exception as oException:
       if bThrowErrors:
         raise;
@@ -694,7 +694,7 @@ class cFileSystemItem(object):
         return False;
     oSelf.__bWritable = True;
     try:
-      oSelf.__oPyFile.write("");
+      oSelf.__oPyFile.write(b"");
       oSelf.__oPyZipFile = zipfile.ZipFile(oSelf.__oPyFile, "w");
       oSelf.__doPyZipInfo_by_sZipInternalPath = {};
     except:
@@ -1008,7 +1008,8 @@ class cFileSystemItem(object):
         assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
             "Cannot close %s" % oSelf.sPath;
   
-  def __ZipFile_foCreateFile(oSelf, sPath, sData, bKeepOpen, bThrowErrors):
+  def __ZipFile_foCreateFile(oSelf, sPath, sbData, bKeepOpen, bThrowErrors):
+    fAssertType("sbData", sbData, bytes);
     bZipFileMustBeClosed = False;
     if not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors):
       bZipFileMustBeClosed = True;
@@ -1019,7 +1020,7 @@ class cFileSystemItem(object):
         "Cannot create/overwrite existing file %s in zip file %s!" % (sPath, oSelf.sPath);
     try:
       try:
-        oSelf.__oPyZipFile.writestr(sZipInternalPath, sData, zipfile.ZIP_DEFLATED);
+        oSelf.__oPyZipFile.writestr(sZipInternalPath, sbData, zipfile.ZIP_DEFLATED);
       except:
         if bThrowErrors:
           raise;
@@ -1027,8 +1028,8 @@ class cFileSystemItem(object):
       # Update the cached list of ZipInfo objects by file name
       oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath[sZipInternalPath] = oSelf.__oPyZipFile.getinfo(sZipInternalPath);
       if bKeepOpen:
-        oPyFile = StringIO();
-        oPyFile.write(sData);
+        oPyFile = BytesIO();
+        oPyFile.write(sbData);
         oPyFile.seek(0);
         oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath] = oPyFile;
         oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath] = bWritable;
@@ -1049,14 +1050,14 @@ class cFileSystemItem(object):
           "Cannot get files list of zip file %s if it cannot be opened!" % oSelf.sPath;
     try:
       if sZipInternalPath in oSelf.__ZipFile_doPyZipInfo_by_sZipInternalPath:
-        sData = oSelf.__oPyZipFile.read(sZipInternalPath);
-        oPyFile = StringIO();
-        oPyFile.write(sData);
+        sbData = oSelf.__oPyZipFile.read(sZipInternalPath);
+        oPyFile = BytesIO();
+        oPyFile.write(sbData);
         oPyFile.seek(0);
       else:
         assert bWritable, \
             "Cannot open file %s in zip file %s for reading if it does not exist!" % (sPath, oSelf.sPath);
-        oPyFile = StringIO();
+        oPyFile = BytesIO();
       oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath] = oPyFile;
       oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath] = bWritable;
       return oPyFile;
@@ -1085,8 +1086,8 @@ class cFileSystemItem(object):
         # We assume writable files have been modifed and need to be saved in the zip file.
         try:
           oPyFile.seek(0);
-          sData = oPyFile.read();
-          oSelf.__oPyZipFile.writestr(sZipInternalPath, sData);
+          sbData = oPyFile.read();
+          oSelf.__oPyZipFile.writestr(sZipInternalPath, sbData);
         except:
           if bThrowErrors:
             raise;

@@ -13,51 +13,51 @@ def fsGetNormalizedPath(sPath, sBasePath = None):
       sNormalizedPath = "";
     return sBase + sNormalizedPath;
   if not sPath:
-    sPath = os.getcwdu();
+    sPath = os.getcwd();
   sOriginalPath = sPath;
-  if not isinstance(sPath, unicode):
-    sPath = unicode(sPath, "cp437");
+  if not isinstance(sPath, str):
+    sPath = str(sPath, "cp437");
   if sPath.startswith("\\\\.\\"): # Physical drive
     raise NotImplementedError();
   elif sPath.startswith("\\\\?\\"): # Extended path
     sPath = sPath[4:];
     if sPath.startswith("UNC\\"):
       # "\\?\" + "UNC\" + "<server>" + "\" + "<path>" => "\\" + "<server>" + "\" + normalize("<path>")
-      sServer, sPath = sPath[4:].split(u"\\", 1);
-      sPath = fsNormalizePathInternal(u"\\\\" + sServer + u"\\", sPath);
-    elif len(sPath) >= 3 and sPath[1:3] == u":\\":
+      sServer, sPath = sPath[4:].split("\\", 1);
+      sPath = fsNormalizePathInternal("\\\\" + sServer + "\\", sPath);
+    elif len(sPath) >= 3 and sPath[1:3] == ":\\":
       # "\\?\" + "X:\" + "<path>" => "X:\" + normalize("<path>")
       sPath = fsNormalizePathInternal(sPath[:3], sPath[3:]);
-    elif len(sPath) >= 2 and sPath[1] == u":":
+    elif len(sPath) >= 2 and sPath[1] == ":":
       # "\\?\" + "X:" + "<path>" => normalize("X:" + "\" + ("<CWD for X:>" + "\") + "<path>")
       sCWDPath = os.path.abspath(sPath[:2])[3:];
       if sCWDPath:
-        sCWDPath += u"\\";
-      sPath = fsNormalizePathInternal(sPath[:2] + u"\\", sCWDPath + sPath[2:]);
+        sCWDPath += "\\";
+      sPath = fsNormalizePathInternal(sPath[:2] + "\\", sCWDPath + sPath[2:]);
     else:
       # "\\?\" + "<server>" + "\" + "<path>" => "\\" + "<server>" "\" + normalize("<path>")
-      sServer, sPath = sPath[4:].split(u"\\", 1);
-      sPath = fsNormalizePathInternal(u"\\\\" + sServer + u"\\", sPath);
+      sServer, sPath = sPath[4:].split("\\", 1);
+      sPath = fsNormalizePathInternal("\\\\" + sServer + "\\", sPath);
   elif sPath.startswith("\\\\"):
     # "\\" "<server>" + "\" + "<path>" => "\\" + "<server>" + "\" + normalize("<path>")
-    sServer, sPath = sPath[2:].split(u"\\", 1);
-    sPath = fsNormalizePathInternal(u"\\\\" + sServer + u"\\", sPath);
-  elif len(sPath) >= 3 and sPath[1:3] == u":\\":
+    sServer, sPath = sPath[2:].split("\\", 1);
+    sPath = fsNormalizePathInternal("\\\\" + sServer + "\\", sPath);
+  elif len(sPath) >= 3 and sPath[1:3] == ":\\":
     # "X:\" "<path>" => "X:\" normalize("<path>")
     sPath = fsNormalizePathInternal(sPath[:3], sPath[3:]);
-  elif len(sPath) >= 2 and sPath[1] == u":":
+  elif len(sPath) >= 2 and sPath[1] == ":":
     # "X:" "<path>" => normalize("<CWD for X:>" + "\" + "<path>")
     sCWDPath = os.path.abspath(sPath[:2])[3:];
     if sCWDPath:
-      sCWDPath += u"\\";
-    sPath = fsNormalizePathInternal(sPath[:2] + u"\\", sCWDPath + sPath[2:]);
+      sCWDPath += "\\";
+    sPath = fsNormalizePathInternal(sPath[:2] + "\\", sCWDPath + sPath[2:]);
   elif sPath.startswith(os.sep) and os.name != "nt":
     # Absolute LINUX path
     sPath = fsNormalizePathInternal(None, sPath);
   else: # relative path in sBasePath or CWD.
     # "<path>" => recursive((sBasePath or "<CWD>") + "\" + "<path>")
     # Recursive
-    sPath = fsGetNormalizedPath((sBasePath or os.getcwdu()) + os.sep + sPath);
+    sPath = fsGetNormalizedPath((sBasePath or os.getcwd()) + os.sep + sPath);
   # Convert to ASCII if possible
   try:
     sPath = str(sPath, encoding = "ascii");

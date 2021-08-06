@@ -9,6 +9,7 @@ except ModuleNotFoundError as oException:
   ShowDebugOutput = fShowDebugOutput = lambda x: x; # NOP
 
 from mNotProvided import *;
+from mWindowsSDK import *;
 
 from .fs0GetDOSPath import fs0GetDOSPath;
 from .fsGetNormalizedPath import fsGetNormalizedPath;
@@ -165,14 +166,17 @@ class cFileSystemItem(object):
     return oSelf.__foGetZipRoot();
   
   def __del__(oSelf):
-    try:
-      oSelf.__oPyZipFile.close();
-    except Exception:
-      pass;
-    try:
-      oSelf.__oPyFile.close();
-    except Exception:
-      pass;
+    if oSelf.__oPyZipFile:
+      try:
+        oSelf.__oPyZipFile.close();
+      except Exception:
+        pass;
+    if oSelf.__oPyFile:
+      try:
+        oSelf.__oPyFile.close();
+      except Exception:
+        pass;
+      oSelf.__fReapplyAccessLimitingAttributesAfterOperation();
     try:
       asZipFileOpenWritableInternalPaths = list(oSelf.__dbWritable_by_sZipInternalPath.keys());
     except Exception:
@@ -184,6 +188,28 @@ class cFileSystemItem(object):
             sZipInternalPath.replace("/", os.sep)
             for sZipInternalPath in asZipFileOpenWritableInternalPaths
           ]));
+  
+  def __fRemoveAccessLimitingAttributesBeforeOperation(oSelf):
+    oKernel32 = foLoadKernel32DLL();
+    uFlags = oKernel32.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
+    oSelf.__bWasHiddenBeforeOpen = (uFlags & FILE_ATTRIBUTE_HIDDEN) != 0;
+    if oSelf.__bWasHiddenBeforeOpen:
+      uFlags -= FILE_ATTRIBUTE_HIDDEN;
+    oSelf.__bWasReadOnlyBeforeOpen = (uFlags & FILE_ATTRIBUTE_READONLY) != 0;
+    if oSelf.__bWasReadOnlyBeforeOpen:
+      uFlags -= FILE_ATTRIBUTE_READONLY;
+    if oSelf.__bWasHiddenBeforeOpen or oSelf.__bWasReadOnlyBeforeOpen:
+      oKernel32.SetFileAttributesW(LPCWSTR(oSelf.sWindowsPath), DWORD(uFlags));
+  
+  def __fReapplyAccessLimitingAttributesAfterOperation(oSelf):
+    if oSelf.__bWasHiddenBeforeOpen or oSelf.__bWasReadOnlyBeforeOpen:
+      oKernel32 = foLoadKernel32DLL();
+      uFlags = oKernel32.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
+      if oSelf.__bWasHiddenBeforeOpen:
+        uFlags |= FILE_ATTRIBUTE_HIDDEN;
+      if oSelf.__bWasReadOnlyBeforeOpen:
+        uFlags |= FILE_ATTRIBUTE_READONLY;
+      oKernel32.SetFileAttributesW(LPCWSTR(oSelf.sWindowsPath), DWORD(uFlags));
   
   @ShowDebugOutput
   def fsGetRelativePathTo(oSelf, sAbsoluteDescendantPath_or_oDescendant, bThrowErrors = False):
@@ -549,6 +575,7 @@ class cFileSystemItem(object):
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foCreateFile(oSelf.sPath, sbData, bKeepOpen, bThrowErrors);
+      oSelf.__bWasHiddenBeforeOpen = False;
       if not oSelf.__oPyFile:
         fShowDebugOutput("Cannot create file in zip file");
         return False;
@@ -565,6 +592,7 @@ class cFileSystemItem(object):
           return False;
       try:
         oSelf.__oPyFile = open(oSelf.sWindowsPath, "wb");
+        oSelf.__bWasHiddenBeforeOpen = False;
         oSelf.__bWritable = True;
         try:
           oSelf.__oPyFile.write(sbData);
@@ -593,13 +621,16 @@ class cFileSystemItem(object):
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable, bThrowErrors);
+      oSelf.__bWasHiddenBeforeOpen = False;
       if not oSelf.__oPyFile:
         fShowDebugOutput("Cannot open file in zip file");
         return False;
     else:
+      oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
       try:
         oSelf.__oPyFile = open(oSelf.sWindowsPath, ("a+b" if bAppend else "wb") if bWritable else "rb");
       except Exception as oException:
+        oSelf.__fReapplyAccessLimitingAttributesAfterOperation();
         if bThrowErrors:
           raise;
         fShowDebugOutput("Exception: %s" % repr(oException));
@@ -683,11 +714,13 @@ class cFileSystemItem(object):
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable = True, bThrowErrors = bThrowErrors);
+      oSelf.__bWasHiddenBeforeOpen = False;
       if not oSelf.__oPyFile: return False;
     else:
       # Open/create the file as writable and truncate it if it already existed.
       try:
         oSelf.__oPyFile = open(oSelf.sWindowsPath, "wb");
+        oSelf.__bWasHiddenBeforeOpen = False;
       except:
         if bThrowErrors:
           raise;
@@ -724,9 +757,11 @@ class cFileSystemItem(object):
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable, bThrowErrors);
       if not oSelf.__oPyFile: return False;
     else:
+      oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
       try:
         oSelf.__oPyFile = open(oSelf.sWindowsPath, "a+b" if bWritable else "rb");
       except:
+        oSelf.__fReapplyAccessLimitingAttributesAfterOperation();
         if bThrowErrors:
           raise;
         return False;
@@ -814,6 +849,7 @@ class cFileSystemItem(object):
         if bThrowErrors:
           raise;
         return False;
+      oSelf.__fReapplyAccessLimitingAttributesAfterOperation();
       oSelf.__oPyFile = None;
     oSelf.__bWritable = False;
     return True;
@@ -850,6 +886,8 @@ class cFileSystemItem(object):
   def fbDeleteDescendants(oSelf, bClose = False, bParseZipFiles = True, bThrowErrors = False):
     if bClose:
       if not oSelf.fbClose(bThrowErrors = bThrowErrors):
+        assert not bThrowErrors, \
+            "%s.fbClose(bThrowErrors = True) returned False!?" % oSelf;
         return False;
     else:
       assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
@@ -860,9 +898,11 @@ class cFileSystemItem(object):
         "Cannot delete descendants of %s when it is a file!" % oSelf.sPath;
     aoChildren = oSelf.faoGetChildren(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
     if aoChildren is None:
-      return False;
+      return True;
     for oChild in aoChildren:
       if not oChild.fbDelete(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
+        assert not bThrowErrors, \
+            "%s.fbDelete(bThrowErrors = True) returned False!?" % oChild;
         return False;
     return True;
   
@@ -870,6 +910,8 @@ class cFileSystemItem(object):
   def fbDelete(oSelf, bClose = False, bParseZipFiles = True, bThrowErrors = False):
     if bClose:
       if not oSelf.fbClose(bThrowErrors = bThrowErrors):
+        assert not bThrowErrors, \
+            "%s.fbClose(bThrowErrors = True) returned False!?" % oSelf;
         return False;
     else:
       assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
@@ -881,26 +923,25 @@ class cFileSystemItem(object):
       assert not oZipRoot, \
           "Deleting is not implemented within zip files!";
     # Handle descendants if any
-    if oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      try:
-        os.remove(oSelf.sWindowsPath);
-      except:
-        if bThrowErrors:
-          raise;
-        return False;
-      if oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        return False;
-    else:
-      if not oSelf.fbDeleteDescendants(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        return False;
-      try:
-        os.rmdir(oSelf.sWindowsPath);
-      except:
-        if bThrowErrors:
-          raise;
-        return False;
-      if oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        return False;
+    bIsFolder = oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
+    if bIsFolder and not oSelf.fbDeleteDescendants(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
+      assert not bThrowErrors, \
+          "%s.fbDeleteDescendants(bThrowErrors = True) returned False!?" % oSelf;
+      return False;
+    # Remive hidden/read-only attributes;
+    oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
+    # Delete folder or file
+    try:
+      os.rmdir(oSelf.sWindowsPath) if bIsFolder else os.remove(oSelf.sWindowsPath);
+    except:
+      if bThrowErrors:
+        raise;
+      return False;
+    # Make sure it no longer exists
+    if oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
+      if bThrowErrors:
+        raise AssertionError("Folder %s exists after being removed!?" % oSelf.sPath);
+      return False;
     return True;
   
   # Create (Child|Descendant) Folder

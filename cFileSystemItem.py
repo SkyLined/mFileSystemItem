@@ -890,6 +890,33 @@ class cFileSystemItem(object):
     return True;
   
   @ShowDebugOutput
+  def fbMove(oSelf, oNewItem, bParseZipFiles = True, bThrowErrors = False):
+    assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
+        "Cannot rename %s when it is open as a file!" % oSelf.sPath;
+    assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
+        "Cannot rename %s when it is open as a zip file!" % oSelf.sPath;
+    if bParseZipFiles:
+      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      assert not oZipRoot, \
+          "Renaming is not implemented within zip files!";
+    try:
+      os.rename(oSelf.sWindowsPath, oNewItem.sWindowsPath);
+    except:
+      if bThrowErrors:
+        raise;
+      return False;
+    if not oNewItem.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
+      return False;
+    oSelf.sPath = oNewItem.sPath;
+    oSelf.sName = oNewItem.sName;
+    oSelf.s0Extension = oNewItem.s0Extension;
+    oSelf.__sWindowsPath = oNewItem.__sWindowsPath;
+    oSelf.__bWindowsPathSet = oNewItem.__bWindowsPathSet;
+    oSelf.__sDOSPath = oNewItem.__sDOSPath;
+    oSelf.__bDOSPathSet = oNewItem.__bDOSPathSet;
+    return True;
+  
+  @ShowDebugOutput
   def fbDeleteDescendants(oSelf, bClose = False, bParseZipFiles = True, bThrowErrors = False):
     if bClose:
       if not oSelf.fbClose(bThrowErrors = bThrowErrors):

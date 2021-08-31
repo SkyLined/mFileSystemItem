@@ -575,7 +575,6 @@ class cFileSystemItem(object):
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foCreateFile(oSelf.sPath, sbData, bKeepOpen, bThrowErrors);
-      oSelf.__bWasHiddenBeforeOpen = False;
       if not oSelf.__oPyFile:
         fShowDebugOutput("Cannot create file in zip file");
         return False;
@@ -624,7 +623,6 @@ class cFileSystemItem(object):
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable, bThrowErrors);
-      oSelf.__bWasHiddenBeforeOpen = False;
       if not oSelf.__oPyFile:
         fShowDebugOutput("Cannot open file in zip file");
         return False;
@@ -726,7 +724,6 @@ class cFileSystemItem(object):
       # Open/create the file as writable and truncate it if it already existed.
       try:
         oSelf.__oPyFile = open(oSelf.sWindowsPath, "wb");
-        oSelf.__bWasHiddenBeforeOpen = False;
       except:
         if bThrowErrors:
           raise;

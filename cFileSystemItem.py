@@ -100,7 +100,7 @@ class cFileSystemItem(object):
           (repr(sPath), repr(oSelf.sPath), repr(sParentPath), repr(oParent.sPath));
     oSelf.sName = os.path.basename(oSelf.sPath);
     uDotIndex = oSelf.sName.rfind(".");
-    oSelf.sExtension = None if uDotIndex == -1 else oSelf.sName[uDotIndex + 1:];
+    oSelf.s0Extension = None if uDotIndex == -1 else oSelf.sName[uDotIndex + 1:];
     
     oSelf.__sWindowsPath = None;
     oSelf.__bWindowsPathSet = False;
@@ -782,7 +782,7 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fbCreateAsParent(oSelf, bParseZipFiles = False, bThrowErrors = False):
-    bIsZipFile = oSelf.sExtension and oSelf.sExtension.lower() == "zip";
+    bIsZipFile = oSelf.s0Extension and oSelf.s0Extension.lower() == "zip";
     sCreateAsType = "zip file" if bIsZipFile else "folder";
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
         "Cannot create %s %s when it is already open as a zip file!" % (sCreateAsType, oSelf.sPath);
@@ -875,7 +875,7 @@ class cFileSystemItem(object):
       return False;
     oSelf.sPath = oNewItem.sPath;
     oSelf.sName = oNewItem.sName;
-    oSelf.sExtension = oNewItem.sExtension;
+    oSelf.s0Extension = oNewItem.s0Extension;
     oSelf.__sWindowsPath = oNewItem.__sWindowsPath;
     oSelf.__bWindowsPathSet = oNewItem.__bWindowsPathSet;
     oSelf.__sDOSPath = oNewItem.__sDOSPath;

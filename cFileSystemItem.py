@@ -561,7 +561,7 @@ class cFileSystemItem(object):
     return bSuccess;
   
   @ShowDebugOutput
-  def fbCreateAsFile(oSelf, sbData = "", bCreateParents = False, bParseZipFiles = False, bKeepOpen = False, bThrowErrors = False):
+  def fbCreateAsFile(oSelf, sbData = b"", bCreateParents = False, bParseZipFiles = False, bKeepOpen = False, bThrowErrors = False):
     assert oSelf.oParent, \
         "Cannot create file %s as a root node!" % oSelf.sPath;
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \

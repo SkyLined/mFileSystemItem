@@ -579,6 +579,8 @@ class cFileSystemItem(object):
       if not oSelf.__oPyFile:
         fShowDebugOutput("Cannot create file in zip file");
         return False;
+      oSelf.__bWasReadOnlyBeforeOpen = False;
+      oSelf.__bWasHiddenBeforeOpen = False;
       if not bKeepOpen: # __ZipFile_foCreateFile will return True if bKeepOpen is False.
         oSelf.__oPyFile = None;
       else:
@@ -592,6 +594,7 @@ class cFileSystemItem(object):
           return False;
       try:
         oSelf.__oPyFile = open(oSelf.sWindowsPath, "wb");
+        oSelf.__bWasReadOnlyBeforeOpen = False;
         oSelf.__bWasHiddenBeforeOpen = False;
         oSelf.__bWritable = True;
         try:
@@ -625,6 +628,8 @@ class cFileSystemItem(object):
       if not oSelf.__oPyFile:
         fShowDebugOutput("Cannot open file in zip file");
         return False;
+      oSelf.__bWasReadOnlyBeforeOpen = False;
+      oSelf.__bWasHiddenBeforeOpen = False;
     else:
       oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
       try:
@@ -714,8 +719,9 @@ class cFileSystemItem(object):
     oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable = True, bThrowErrors = bThrowErrors);
-      oSelf.__bWasHiddenBeforeOpen = False;
-      if not oSelf.__oPyFile: return False;
+      if not oSelf.__oPyFile:
+        fShowDebugOutput("Cannot create file as zip file");
+        return False;
     else:
       # Open/create the file as writable and truncate it if it already existed.
       try:
@@ -725,6 +731,8 @@ class cFileSystemItem(object):
         if bThrowErrors:
           raise;
         return False;
+    oSelf.__bWasReadOnlyBeforeOpen = False;
+    oSelf.__bWasHiddenBeforeOpen = False;
     oSelf.__bWritable = True;
     try:
       oSelf.__oPyFile.write(b"");
@@ -756,6 +764,8 @@ class cFileSystemItem(object):
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable, bThrowErrors);
       if not oSelf.__oPyFile: return False;
+      oSelf.__bWasReadOnlyBeforeOpen = False;
+      oSelf.__bWasHiddenBeforeOpen = False;
     else:
       oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
       try:

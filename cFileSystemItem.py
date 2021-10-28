@@ -10,6 +10,7 @@ except ModuleNotFoundError as oException:
 
 from mNotProvided import *;
 from mWindowsSDK import *;
+oKernel32 = foLoadKernel32DLL();
 
 from .fs0GetDOSPath import fs0GetDOSPath;
 from .fsGetNormalizedPath import fsGetNormalizedPath;
@@ -190,7 +191,6 @@ class cFileSystemItem(object):
           ]));
   
   def __fRemoveAccessLimitingAttributesBeforeOperation(oSelf):
-    oKernel32 = foLoadKernel32DLL();
     uFlags = oKernel32.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
     oSelf.__bWasHiddenBeforeOpen = (uFlags & FILE_ATTRIBUTE_HIDDEN) != 0;
     if oSelf.__bWasHiddenBeforeOpen:
@@ -203,7 +203,6 @@ class cFileSystemItem(object):
   
   def __fReapplyAccessLimitingAttributesAfterOperation(oSelf):
     if oSelf.__bWasHiddenBeforeOpen or oSelf.__bWasReadOnlyBeforeOpen:
-      oKernel32 = foLoadKernel32DLL();
       uFlags = oKernel32.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
       if oSelf.__bWasHiddenBeforeOpen:
         uFlags |= FILE_ATTRIBUTE_HIDDEN;

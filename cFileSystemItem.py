@@ -1,4 +1,4 @@
-import os, re, zipfile;
+﻿import os, re, zipfile;
 from io import BytesIO;
 
 try: # mDebugOutput use is Optional
@@ -30,8 +30,8 @@ gdsInvalidPathCharacterNormalTranslationMap = {
 };
 gdsInvalidPathCharacterUnicodeHomographTranslationMap = {
   # Translates characters that are not valid in file/folder names to a visually similar unicode character.
-  '\x00':  ".",      # 
-  '\x01':  "\u263A", # ,- Assume cp437
+  '\x00':  " ",      # ,- Assume cp437
+  '\x01':  "\u263A", # |
   '\x02':  "\u263B", # |
   '\x03':  "\u2665", # |
   '\x04':  "\u2666", # |
@@ -62,15 +62,15 @@ gdsInvalidPathCharacterUnicodeHomographTranslationMap = {
   '\x1D':  "\u2194", # |
   '\x1E':  "\u25B2", # |
   '\x1F':  "\u25BC", # `-
-  '"':     "\u2033", # DOUBLE PRIME
-  "<":     "\u3008", # LEFT ANGLE BRACKET
-  ">":     "\u3009", # RIGHT ANGLE BRACKET
-  "\\":    "\u29F9", # BIG REVERSE SOLIDUS
-  "/":     "\u29F8", # BIG SOLIDUS
-  "?":     "\u2753", # BLACK QUESTION MARK ORNAMENT
-  "*":     "\u204E", # LOWER ASTERISK
-  ":":     "\u0589", # ARMENIAN FULL STOP
-  "|":     "\u01C0", # LATIN LETTER DENTAL CLICK
+  '"':     "″", # DOUBLE PRIME
+  "<":     "〈", # LEFT ANGLE BRACKET
+  ">":     "〉", # RIGHT ANGLE BRACKET
+  "\\":    "⧹", # BIG REVERSE SOLIDUS
+  "/":     "⧸", # BIG SOLIDUS
+  "?":     "❓", # BLACK QUESTION MARK ORNAMENT
+  "*":     "✱", # HEAVY ASTERISK
+  ":":     "։", # ARMENIAN FULL STOP
+  "|":     "ǀ", # LATIN LETTER DENTAL CLICK
 };
 for uCharCode in range(0, 0x20):
   # Translate control codes

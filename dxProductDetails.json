@@ -1,7 +1,7 @@
 {
   "a0sDebugAdditionalProductNames": [
-    "mDebugOutput",
-    "mConsole"
+    "mConsole",
+    "mDebugOutput"
   ],
   "a0sDependentOnProductNames": [
     "mNotProvided",
@@ -17,7 +17,7 @@
     "sbRepositoryName": "mFileSystemItem",
     "sbUserName": "SkyLined"
   },
-  "oProductVersion": "2021-08-31 18:14",
+  "oProductVersion": "2021-10-29 09:58",
   "s0PythonModuleName": "mFileSystemItem",
   "sProductAuthor": "SkyLined",
   "sProductName": "mFileSystemItem",

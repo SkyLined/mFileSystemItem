@@ -109,7 +109,7 @@ class cFileSystemItem(object):
     oSelf.__bDOSPathSet = False;
     
     oSelf.__oRoot = oParent.oRoot if oParent else None;
-    oSelf.__oParent = oParent;
+    oSelf.__o0Parent = oParent;
     oSelf.__bParentSet = oParent is not None;
     oSelf.__oPyFile = None;
     oSelf.__oPyZipFile = None;
@@ -120,28 +120,33 @@ class cFileSystemItem(object):
     return;
   
   @property
+  def oParent(oSelf): # TODO: Should be depricated!!
+    return oSelf.o0Parent;
+  @property
   @ShowDebugOutput
-  def oParent(oSelf):
+  def o0Parent(oSelf):
     if not oSelf.__bParentSet:
       sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");
       # This will be None for root nodes, where sParentPath == its own path.
-      oSelf.__oParent = oSelf.__class__(sParentPath) if sParentPath != oSelf.sPath else None;
-      assert oSelf.__oParent is None or sParentPath == oSelf.__oParent.sPath, \
+      oSelf.__o0Parent = oSelf.__class__(sParentPath) if sParentPath != oSelf.sPath else None;
+      assert oSelf.__o0Parent is None or sParentPath == oSelf.__o0Parent.sPath, \
           "Cannot create a parent (path = %s, normalized = %s) for path %s: result is %s" % \
-          (repr(oSelf.sPath + os.sep + ".."), repr(sParentPath), repr(oSelf.sPath), repr(oSelf.__oParent.sPath));
+          (repr(oSelf.sPath + os.sep + ".."), repr(sParentPath), repr(oSelf.sPath), repr(oSelf.__o0Parent.sPath));
       oSelf.__bParentSet = True;
-    return oSelf.__oParent;
+    return oSelf.__o0Parent;
   
   @property
   @ShowDebugOutput
   def oRoot(oSelf):
     if not oSelf.__oRoot:
-      oSelf.__oRoot = oSelf.oParent.oRoot if oSelf.oParent else oSelf;
+      o0Parent = oSelf.o0Parent;
+      oSelf.__oRoot = o0Parent.oRoot if o0Parent else oSelf;
     return oSelf.__oRoot;
   
   @ShowDebugOutput
-  def __foGetZipRoot(oSelf, bThrowErrors = False):
-    if not oSelf.oParent:
+  def __fo0GetZipRoot(oSelf, bThrowErrors = False):
+    o0Parent = oSelf.o0Parent;
+    if not o0Parent:
       # If it does not have a parent, it cannot be in a zip file.
       fShowDebugOutput("root cannot have a zip root");
       return None;
@@ -153,18 +158,21 @@ class cFileSystemItem(object):
     except:
       if bThrowErrors:
         raise;
-    if oSelf.oParent.fbIsValidZipFile(bThrowErrors = bThrowErrors):
+    if o0Parent.fbIsValidZipFile(bThrowErrors = bThrowErrors):
       # If its parent is a valid zip file, this is its zip root
       fShowDebugOutput("parent");
-      return oSelf.oParent;
+      return o0Parent;
     # This item inherits its zip root from its parent.
-    oZipRoot = oSelf.oParent.__foGetZipRoot(bThrowErrors = bThrowErrors);
+    oZipRoot = o0Parent.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
     fShowDebugOutput("ancestor");
     return oZipRoot
   
   @property
-  def oZipRoot(oSelf):
-    return oSelf.__foGetZipRoot();
+  def oZipRoot(oSelf): # TODO: Should be depricated!!
+    return oSelf.o0ZipRoot;
+  @property
+  def o0ZipRoot(oSelf):
+    return oSelf.__fo0GetZipRoot();
   
   def __del__(oSelf):
     if oSelf.__oPyZipFile:
@@ -235,7 +243,7 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def s0DOSPath(oSelf):
     if not oSelf.__bDOSPathSet:
-      if not oSelf.__foGetZipRoot():
+      if not oSelf.__fo0GetZipRoot():
         oSelf.__sDOSPath = fs0GetDOSPath(oSelf.sPath);
       oSelf.__bDOSPathSet = True;
     return oSelf.__sDOSPath;
@@ -275,7 +283,7 @@ class cFileSystemItem(object):
       if bThrowErrors:
         raise;
     if bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       if oZipRoot and oZipRoot.__ZipFile_fbContains(oSelf.sPath, bThrowErrors):
         fShowDebugOutput("zipped file exists");
         return True;
@@ -297,7 +305,7 @@ class cFileSystemItem(object):
       if bThrowErrors:
         raise;
     if bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       if oZipRoot and oZipRoot.__ZipFile_fbContainsFolder(oSelf.sPath, bThrowErrors):
         fShowDebugOutput("found in file path in zip file");
         return True;
@@ -320,7 +328,7 @@ class cFileSystemItem(object):
       if bThrowErrors:
         raise;
     if bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       if oZipRoot and oZipRoot.__ZipFile_fbContainsFile(oSelf.sPath, bThrowErrors):
         fShowDebugOutput("found in zip file");
         return True;
@@ -349,7 +357,7 @@ class cFileSystemItem(object):
       if bThrowErrors:
         raise;
     if bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       if oZipRoot:
         oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable = False, bThrowErrors = bThrowErrors);
         if oPyFile:
@@ -383,7 +391,7 @@ class cFileSystemItem(object):
       if not oSelf.oParent.fbCreateAsParent(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
         fShowDebugOutput("cannot create parent");
         return False;
-    if bParseZipFiles and oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors):
+    if bParseZipFiles and oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors):
       # Zip files cannot have folders, so we will do nothing here. If a file is
       # created in this folder or one of its sub-folders, this folder will 
       # magically start to exist; in effect folders are virtual.
@@ -409,7 +417,7 @@ class cFileSystemItem(object):
     if bParseZipFiles and oSelf.fbIsValidZipFile(bThrowErrors = bThrowErrors):
       asChildNames = oSelf.__ZipFile_fasGetChildNames(oSelf.sPath, bThrowErrors);
     else:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) \
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors) \
           if bParseZipFiles else None;
       if oZipRoot:
         asChildNames = oZipRoot.__ZipFile_fasGetChildNames(oSelf.sPath, bThrowErrors);
@@ -448,7 +456,7 @@ class cFileSystemItem(object):
     if bParseZipFiles and oSelf.fbIsValidZipFile(bThrowErrors = bThrowErrors):
      asChildNames = oSelf.__ZipFile_fasGetChildNames(oSelf.sPath, bThrowErrors);
     else:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) \
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors) \
           if bParseZipFiles else None;
       if oZipRoot:
         asChildNames = oZipRoot.__ZipFile_fasGetChildNames(oSelf.sPath, bThrowErrors) \
@@ -571,7 +579,7 @@ class cFileSystemItem(object):
         "Cannot create file %s if it already exists as a folder!" % oSelf.sPath;
     assert not oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot create file %s if it already exists!" % oSelf.sPath;
-    oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
+    oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foCreateFile(oSelf.sPath, sbData, bKeepOpen, bThrowErrors);
       if not oSelf.__oPyFile:
@@ -619,7 +627,7 @@ class cFileSystemItem(object):
         "Cannot open file %s when it does not exist!" % oSelf.sPath;
     assert oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot open file %s when it is not a file!" % oSelf.sPath;
-    oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+    oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable, bThrowErrors);
       if not oSelf.__oPyFile:
@@ -713,7 +721,7 @@ class cFileSystemItem(object):
           "Cannot create folder %s when its parent does not exist!" % oSelf.sPath;
       if not oSelf.oParent.fbCreateAsParent(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
         return False;
-    oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
+    oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable = True, bThrowErrors = bThrowErrors);
       if not oSelf.__oPyFile:
@@ -756,7 +764,7 @@ class cFileSystemItem(object):
         "Cannot open zip file %s if it does not exist!" % oSelf.sPath;
     assert oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot open zip file %s when it is not a file!" % oSelf.sPath;
-    oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
+    oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
     if oZipRoot:
       oSelf.__oPyFile = oZipRoot.__ZipFile_foOpenPyFile(oSelf.sPath, bWritable, bThrowErrors);
       if not oSelf.__oPyFile: return False;
@@ -797,7 +805,7 @@ class cFileSystemItem(object):
     assert not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot create %s %s when it already exists as a file!" % (sCreateAsType, oSelf.sPath);
     if not bIsZipFile and bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       if oZipRoot:
         # Folders cannot be stored within a zip file; only files can be stored with a relative
         # path that contain folder names. So, if we are asked to create a parent folder it must
@@ -845,7 +853,7 @@ class cFileSystemItem(object):
       oSelf.__oPyZipFile = None;
       oSelf.__doPyZipInfo_by_sZipInternalPath = None;
     if oSelf.__oPyFile:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       if oZipRoot:
         assert oZipRoot.__ZipFile_fbClosePyFile(oSelf.sPath, oSelf.__oPyFile, bThrowErrors), \
             "Cannot close zip file %s in zip file %s" % (oSelf.sPath, oZipRoot.sPath);
@@ -867,7 +875,7 @@ class cFileSystemItem(object):
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
         "Cannot rename %s when it is open as a zip file!" % oSelf.sPath;
     if bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       assert not oZipRoot, \
           "Renaming is not implemented within zip files!";
     oNewItem = oSelf.oParent.foGetChild(sNewName, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
@@ -895,7 +903,7 @@ class cFileSystemItem(object):
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
         "Cannot rename %s when it is open as a zip file!" % oSelf.sPath;
     if bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       assert not oZipRoot, \
           "Renaming is not implemented within zip files!";
     try:
@@ -952,7 +960,7 @@ class cFileSystemItem(object):
       assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
           "Cannot delete %s when it is open as a file!" % oSelf.sPath;
     if bParseZipFiles:
-      oZipRoot = oSelf.__foGetZipRoot(bThrowErrors = bThrowErrors);
+      oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       assert not oZipRoot, \
           "Deleting is not implemented within zip files!";
     # Handle descendants if any

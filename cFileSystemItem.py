@@ -9,8 +9,6 @@ except ModuleNotFoundError as oException:
   ShowDebugOutput = fShowDebugOutput = lambda x: x; # NOP
 
 from mNotProvided import *;
-from mWindowsSDK import *;
-oKernel32 = foLoadKernel32DLL();
 
 from .fs0GetDOSPath import fs0GetDOSPath;
 from .fsGetNormalizedPath import fsGetNormalizedPath;
@@ -199,7 +197,9 @@ class cFileSystemItem(object):
           ]));
   
   def __fRemoveAccessLimitingAttributesBeforeOperation(oSelf):
-    uFlags = oKernel32.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
+    from mWindowsSDK.mKernel32 import oKernel32DLL;
+    from mWindowsSDK import LPCWSTR, FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_READONLY, DWORD;
+    uFlags = oKernel32DLL.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
     oSelf.__bWasHiddenBeforeOpen = (uFlags & FILE_ATTRIBUTE_HIDDEN) != 0;
     if oSelf.__bWasHiddenBeforeOpen:
       uFlags -= FILE_ATTRIBUTE_HIDDEN;
@@ -207,16 +207,18 @@ class cFileSystemItem(object):
     if oSelf.__bWasReadOnlyBeforeOpen:
       uFlags -= FILE_ATTRIBUTE_READONLY;
     if oSelf.__bWasHiddenBeforeOpen or oSelf.__bWasReadOnlyBeforeOpen:
-      oKernel32.SetFileAttributesW(LPCWSTR(oSelf.sWindowsPath), DWORD(uFlags));
+      oKernel32DLL.SetFileAttributesW(LPCWSTR(oSelf.sWindowsPath), DWORD(uFlags));
   
   def __fReapplyAccessLimitingAttributesAfterOperation(oSelf):
     if oSelf.__bWasHiddenBeforeOpen or oSelf.__bWasReadOnlyBeforeOpen:
-      uFlags = oKernel32.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
+      from mWindowsSDK.mKernel32 import oKernel32DLL;
+      from mWindowsSDK import LPCWSTR, FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_READONLY, DWORD;
+      uFlags = oKernel32DLL.GetFileAttributesW(LPCWSTR(oSelf.sWindowsPath)).fuGetValue();
       if oSelf.__bWasHiddenBeforeOpen:
         uFlags |= FILE_ATTRIBUTE_HIDDEN;
       if oSelf.__bWasReadOnlyBeforeOpen:
         uFlags |= FILE_ATTRIBUTE_READONLY;
-      oKernel32.SetFileAttributesW(LPCWSTR(oSelf.sWindowsPath), DWORD(uFlags));
+      oKernel32DLL.SetFileAttributesW(LPCWSTR(oSelf.sWindowsPath), DWORD(uFlags));
   
   @ShowDebugOutput
   def fsGetRelativePathTo(oSelf, sAbsoluteDescendantPath_or_oDescendant, bThrowErrors = False):

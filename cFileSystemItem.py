@@ -678,7 +678,7 @@ class cFileSystemItem(object):
     return sbData;
   
   @ShowDebugOutput
-  def fbWrite(oSelf, sbData, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
+  def fbWrite(oSelf, sbData, bAppend = False, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
     # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
         "Cannot write file %s when it is open as a zip file!" % oSelf.sPath;
@@ -692,7 +692,7 @@ class cFileSystemItem(object):
           fShowDebugOutput("cannot create file");
           return False;
         return True;
-      if not oSelf.fbOpenAsFile(bWritable = True, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
+      if not oSelf.fbOpenAsFile(bWritable = True, bAppend = bAppend, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
         fShowDebugOutput("cannot open file");
         return False;
     try:

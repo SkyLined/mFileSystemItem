@@ -413,8 +413,17 @@ class cFileSystemItem(object):
     fShowDebugOutput("folder created");
     return True;
   
-  @ShowDebugOutput
   def faoGetChildren(oSelf, bMustBeFile = False, bMustBeFolder = False, bMustBeValidZipFile = False, \
+      bParseZipFiles = False):
+    return oSelf.fa0oGetChildren(
+      bMustBeFile = bMustBeFile,
+      bMustBeFolder = bMustBeFolder,
+      bMustBeValidZipFile = bMustBeValidZipFile,
+      bParseZipFiles = bParseZipFiles,
+      bThrowErrors = True,
+    );
+  @ShowDebugOutput
+  def fa0oGetChildren(oSelf, bMustBeFile = False, bMustBeFolder = False, bMustBeValidZipFile = False, \
       bParseZipFiles = False, bThrowErrors = False):
     if bParseZipFiles and oSelf.fbIsValidZipFile(bThrowErrors = bThrowErrors):
       asChildNames = oSelf.__ZipFile_fasGetChildNames(oSelf.sPath, bThrowErrors);
@@ -450,8 +459,20 @@ class cFileSystemItem(object):
     ];
     return aoChildren;
   
-  @ShowDebugOutput
   def foGetChild(oSelf, sChildName, bMustBeFile = False, bMustBeFolder = False, \
+      bMustBeValidZipFile = False, bMustExist = False, bParseZipFiles = False, bFixCase = False):
+    return oSelf.fo0GetChild(
+      sChildName,
+      bMustBeFile = bMustBeFile,
+      bMustBeFolder = bMustBeFolder,
+      bMustBeValidZipFile = bMustBeValidZipFile,
+      bMustExist = bMustExist,
+      bParseZipFiles = bParseZipFiles,
+      bThrowErrors = True,
+      bFixCase = bFixCase,
+    );
+  @ShowDebugOutput
+  def fo0GetChild(oSelf, sChildName, bMustBeFile = False, bMustBeFolder = False, \
       bMustBeValidZipFile = False, bMustExist = False, bParseZipFiles = False, bThrowErrors = False, bFixCase = False):
     assert os.sep not in sChildName and os.altsep not in sChildName, \
         "Cannot create a child %s!" % sChildName;
@@ -492,21 +513,35 @@ class cFileSystemItem(object):
         "Child %s of %s does not exist!" % (sChildName, oSelf.sPath);
     return oChild;
   
-  @ShowDebugOutput
   def faoGetDescendants(oSelf, bMustBeFile = False, bMustBeFolder = False, bMustBeValidZipFile = False,
+    bParseZipFiles = False, bParseDescendantZipFiles = False):
+    return oSelf.fa0oGetDescendants(
+      bMustBeFile = bMustBeFile,
+      bMustBeFolder = bMustBeFolder,
+      bMustBeValidZipFile = bMustBeValidZipFile,
+      bThrowErrors = True,
+      bParseZipFiles = bParseZipFiles,
+      bParseDescendantZipFiles = bParseDescendantZipFiles,
+    );
+  @ShowDebugOutput
+  def fa0oGetDescendants(oSelf, bMustBeFile = False, bMustBeFolder = False, bMustBeValidZipFile = False,
       bThrowErrors = False, bParseZipFiles = False, bParseDescendantZipFiles = False):
     aoDescendants = [];
-    aoChildren = oSelf.faoGetChildren(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
-    if aoChildren is None:
+    a0oChildren = oSelf.fa0oGetChildren(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
+    if a0oChildren is None:
       fShowDebugOutput("cannot get list of children");
       return None;
-    for oChild in aoChildren:
+    for oChild in a0oChildren:
       aoDescendants.append(oChild);
       if oChild.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors) \
           or (bParseDescendantZipFiles and oChild.fbIsValidZipFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)):
         # oSelf or its parents can only be zip files if bParseZipFiles was true. If oSelf nor any of its
         # parents were zip files, setting bParseZipFiles has no affect. So we can use bParseZipFiles = true
-        aoDescendants += oChild.faoGetDescendants(bThrowErrors = bThrowErrors, bParseZipFiles = True, bParseDescendantZipFiles = bParseDescendantZipFiles);
+        aoDescendants += oChild.fa0oGetDescendants(
+          bThrowErrors = bThrowErrors,
+          bParseZipFiles = bParseZipFiles,
+          bParseDescendantZipFiles = bParseDescendantZipFiles,
+        ) or [];
     aoDescendants = [
       oDescendant for oDescendant in aoDescendants
       if (
@@ -517,28 +552,48 @@ class cFileSystemItem(object):
     ];
     return aoDescendants;
   
-  @ShowDebugOutput
   def foGetDescendant(oSelf, sDescendantRelativePath, bMustBeFile = False, bMustBeFolder = False, \
+      bMustBeValidZipFile = False, bMustExist = False, bFixCase = False, bParseZipFiles = False):
+    return oSelf.fo0GetDescendant(
+      sDescendantRelativePath,
+      bMustBeFile = bMustBeFile,
+      bMustBeFolder = bMustBeFolder,
+      bMustBeValidZipFile = bMustBeValidZipFile,
+      bMustExist = bMustExist,
+      bFixCase = bFixCase,
+      bParseZipFiles = bParseZipFiles,
+      bThrowErrors = True,
+    );
+  @ShowDebugOutput
+  def fo0GetDescendant(oSelf, sDescendantRelativePath, bMustBeFile = False, bMustBeFolder = False, \
       bMustBeValidZipFile = False, bMustExist = False, bFixCase = False, bParseZipFiles = False, bThrowErrors = False):
     sChildName = sDescendantRelativePath.split(os.sep, 1)[0].split(os.altsep, 1)[0];
     assert sChildName, \
         "Cannot get descendant %s of %s because the path is absolute!" % (sDescendantRelativePath, oSelf.sPath);
     sChildDescendantPath = sDescendantRelativePath[len(sChildName) + 1:];
-    oChild = oSelf.foGetChild(sChildName, bFixCase = bFixCase, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
-    oDescendant = (
-      oChild if not sChildDescendantPath else \
-      oChild.foGetDescendant(sChildDescendantPath, bFixCase = bFixCase, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
+    o0Child = oSelf.fo0GetChild(sChildName, bFixCase = bFixCase, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
+    if o0Child is None:
+      return None;
+    o0Descendant = (
+      o0Child if not sChildDescendantPath else \
+      o0Child.fo0GetDescendant(
+        sChildDescendantPath,
+        bFixCase = bFixCase,
+        bParseZipFiles = bParseZipFiles,
+        bThrowErrors = bThrowErrors,
+      )
     );
-    if oDescendant:
-      assert not bMustBeFile or oDescendant.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-          "Descendant %s of %s is not a file!" % (sDescendantRelativePath, oSelf.sPath);
-      assert not bMustBeFolder or oDescendant.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-          "Descendant %s of %s is not a folder!" % (sDescendantRelativePath, oSelf.sPath);
-      assert not bMustBeValidZipFile or oDescendant.fbIsValidZipFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-          "Descendant %s of %s is not a valid zip file!" % (sDescendantRelativePath, oSelf.sPath);
-      assert not bMustExist or oDescendant.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-          "Descendant %s of %s does not exist!" % (sDescendantRelativePath, oSelf.sPath);
-    return oDescendant;
+    if o0Descendant is None:
+      return None;
+    assert not bMustBeFile or oDescendant.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
+        "Descendant %s of %s is not a file!" % (sDescendantRelativePath, oSelf.sPath);
+    assert not bMustBeFolder or oDescendant.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
+        "Descendant %s of %s is not a folder!" % (sDescendantRelativePath, oSelf.sPath);
+    assert not bMustBeValidZipFile or oDescendant.fbIsValidZipFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
+        "Descendant %s of %s is not a valid zip file!" % (sDescendantRelativePath, oSelf.sPath);
+    assert not bMustExist or oDescendant.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
+        "Descendant %s of %s does not exist!" % (sDescendantRelativePath, oSelf.sPath);
+    return o0Descendant;
   
   @ShowDebugOutput
   def fbSetAsCurrentWorkingDirectory(oSelf, bThrowErrors = False):
@@ -880,22 +935,24 @@ class cFileSystemItem(object):
       oZipRoot = oSelf.__fo0GetZipRoot(bThrowErrors = bThrowErrors);
       assert not oZipRoot, \
           "Renaming is not implemented within zip files!";
-    oNewItem = oSelf.oParent.foGetChild(sNewName, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
+    o0NewItem = oSelf.oParent.fo0GetChild(sNewName, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
+    if o0NewItem is None:
+      return False;
     try:
-      os.rename(oSelf.sWindowsPath, oNewItem.sWindowsPath);
+      os.rename(oSelf.sWindowsPath, o0NewItem.sWindowsPath);
     except:
       if bThrowErrors:
         raise;
       return False;
-    if not oNewItem.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
+    if not o0NewItem.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
       return False;
-    oSelf.sPath = oNewItem.sPath;
-    oSelf.sName = oNewItem.sName;
-    oSelf.s0Extension = oNewItem.s0Extension;
-    oSelf.__sWindowsPath = oNewItem.__sWindowsPath;
-    oSelf.__bWindowsPathSet = oNewItem.__bWindowsPathSet;
-    oSelf.__sDOSPath = oNewItem.__sDOSPath;
-    oSelf.__bDOSPathSet = oNewItem.__bDOSPathSet;
+    oSelf.sPath = o0NewItem.sPath;
+    oSelf.sName = o0NewItem.sName;
+    oSelf.s0Extension = o0NewItem.s0Extension;
+    oSelf.__sWindowsPath = o0NewItem.__sWindowsPath;
+    oSelf.__bWindowsPathSet = o0NewItem.__bWindowsPathSet;
+    oSelf.__sDOSPath = o0NewItem.__sDOSPath;
+    oSelf.__bDOSPathSet = o0NewItem.__bDOSPathSet;
     return True;
   
   @ShowDebugOutput
@@ -939,10 +996,10 @@ class cFileSystemItem(object):
           "Cannot delete %s when it is open as a file!" % oSelf.sPath;
     assert not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
         "Cannot delete descendants of %s when it is a file!" % oSelf.sPath;
-    aoChildren = oSelf.faoGetChildren(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
-    if aoChildren is None:
+    a0oChildren = oSelf.fa0oGetChildren(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
+    if a0oChildren is None:
       return True;
-    for oChild in aoChildren:
+    for oChild in a0oChildren:
       if not oChild.fbDelete(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
         assert not bThrowErrors, \
             "%s.fbDelete(bThrowErrors = True) returned False!?" % oChild;
@@ -986,54 +1043,6 @@ class cFileSystemItem(object):
         raise AssertionError("Folder %s exists after being removed!?" % oSelf.sPath);
       return False;
     return True;
-  
-  # Create (Child|Descendant) Folder
-  @ShowDebugOutput
-  def foCreateChildFolder(oSelf, sChildName, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False, bFixCase = False, bThrowErrors = False):
-    assert os.sep not in sChildName and os.altsep not in sChildName and sChildName != "..", \
-        "Cannot create a child folder %s!" % sChildName;
-    oChild = oSelf.foGetChild(sChildName, bParseZipFiles = bParseZipFiles, bFixCase = bFixCase, bThrowErrors = bThrowErrors);
-    if not oChild.fbCreateAsFolder(bKeepOpen = bKeepOpen, bCreateParents = bCreateParents, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return None;
-    return oChild;
-  @ShowDebugOutput
-  def foCreateDescendantFolder(oSelf, sDescendantRelativePath, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False, bFixCase = False, bThrowErrors = False):
-    oDescendant = oSelf.foGetDescendant(sDescendantRelativePath, bParseZipFiles = bParseZipFiles, bFixCase = bFixCase, bThrowErrors = bThrowErrors);
-    if not oDescendant.fbCreateAsFolder(bKeepOpen = bKeepOpen, bCreateParents = bCreateParents, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return None;
-    return oChild;
-  
-  # Create (Child|Descendant) File
-  @ShowDebugOutput
-  def foCreateChildFile(oSelf, sChildName, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False, bFixCase = False, bThrowErrors = False):
-    assert os.sep not in sChildName and os.altsep not in sChildName and sChildName != "..", \
-        "Cannot create a child file %s!" % sChildName;
-    oChild = oSelf.foGetChild(sChildName, bParseZipFiles = bParseZipFiles, bFixCase = bFixCase, bThrowErrors = bThrowErrors);
-    if not oChild.fbCreateAsFile(bKeepOpen = bKeepOpen, bCreateParents = bCreateParents, bThrowErrors = bThrowErrors):
-      return None;
-    return oDescendant;
-  @ShowDebugOutput
-  def foCreateDescendantFile(oSelf, sDescendantRelativePath, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False, bFixCase = False, bThrowErrors = False):
-    oDescendant = oSelf.foGetDescendant(sDescendantRelativePath, bParseZipFiles = bParseZipFiles, bFixCase = bFixCase, bThrowErrors = bThrowErrors);
-    if not oDescendant.fbCreateAsFile(bKeepOpen = bKeepOpen, bCreateParents = bCreateParents, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return None;
-    return oDescendant;
-  
-  # Create (Child|Descendant) ZipFile
-  @ShowDebugOutput
-  def foCreateChildZipFile(oSelf, sChildName, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False, bFixCase = False, bThrowErrors = False):
-    assert os.sep not in sChildName and os.altsep not in sChildName and sChildName != "..", \
-        "Cannot create a child zip file %s!" % sChildName;
-    oChild = oSelf.foGetChild(sChildName, bParseZipFiles = bParseZipFiles, bFixCase = bFixCase, bThrowErrors = bThrowErrors);
-    if not oChild.fbCreateAsZipFile(bKeepOpen = bKeepOpen, bCreateParents = bCreateParents, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return None;
-    return oChild;
-  @ShowDebugOutput
-  def foCreateDescendantZipFile(oSelf, sDescendantRelativePath, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False, bFixCase = False, bThrowErrors = False):
-    oDescendant = oSelf.foGetDescendant(sDescendantRelativePath, bParseZipFiles = bParseZipFiles, bFixCase = bFixCase, bThrowErrors = bThrowErrors);
-    if not oDescendant.fbCreateAsZipFile(bKeepOpen = bKeepOpen, bCreateParents = bCreateParents, bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return None;
-    return oDescendant;
   
   @property
   def __ZipFile_doPyZipInfo_by_sZipInternalPath(oSelf):

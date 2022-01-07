@@ -705,8 +705,14 @@ class cFileSystemItem(object):
     oSelf.__bWritable = bWritable;
     return True;
   
+  def fsbRead(oSelf, bKeepOpen = None, bParseZipFiles = True):
+    return oSelf.fsb0Read(
+      bKeepOpen = bKeepOpen,
+      bParseZipFiles = bParseZipFiles,
+      bThrowErrors = True,
+    );
   @ShowDebugOutput
-  def fsbRead(oSelf, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
+  def fsb0Read(oSelf, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
     # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
     assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
         "Cannot read file %s when it is open as a zip file!" % oSelf.sPath;

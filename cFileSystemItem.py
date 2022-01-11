@@ -142,7 +142,6 @@ class cFileSystemItem(object):
       oSelf.__oRoot = o0Parent.oRoot if o0Parent else oSelf;
     return oSelf.__oRoot;
   
-  @property
   def fbIsInsideZipFile(oSelf, bThrowErrors = False):
     o0Parent = oSelf.o0Parent;
     if not o0Parent:

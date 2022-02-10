@@ -37,9 +37,53 @@ try:
       def fStatus(*txArguments, **dxArguments):
         pass;
   
-  # Testing is currently extremely rudimentary.
+  bFullTests = False; # Currently not used.
+  bQuickTests = False; # Currently not used.
+  bEnableDebugOutput = False;
+  for sArgument in sys.argv[1:]:
+    if sArgument == "--debug": 
+      bEnableDebugOutput = True;
+    elif sArgument == "--full": 
+      bFullTests = True;
+    elif sArgument == "--quick": 
+      bQuickTests = True;
+    else:
+      raise AssertionError("Unknown argument %s" % sArgument);
+  
   from mFileSystemItem import cFileSystemItem;
-  cFileSystemItem();
+  if bEnableDebugOutput:
+    assert m0DebugOutput, \
+        "The 'mDebugOutput' moduke is needed to show debug output.";
+    m0DebugOutput.fEnableAllDebugOutput();
+    print("*** Debug output enabled.");
+  
+  oTempFolder = cFileSystemItem(os.getenv("temp"));
+  oTempZipFile = oTempFolder.foGetChild("cFileSystemItem test.zip");
+  if oTempZipFile.fbExists():
+    print("*** Deleting old %s" % oTempZipFile.sPath);
+    oTempZipFile.fDelete();
+  print("*** Creating %s" % oTempZipFile.sPath);
+  oTempZipFile.fCreateAsZipFile();
+  
+  oTempTextFileInsideZipFile = oTempZipFile.foGetChild("cFileSystemItem test.text");
+  print("*** Creating %s" % oTempTextFileInsideZipFile.sPath);
+  oTempTextFileInsideZipFile.fWrite(b"test");
+#  oTempTextFileDirectReference = cFileSystemItem(oTempTextFileInsideZipFile.sPath);
+#  print("*** Reading %s" % oTempTextFileInsideZipFile.sPath);
+#  assert oTempTextFileInsideZipFile.fsbRead() == b"test";
+
+# zip files inside zip files is broken :(
+#  oTempZipFileInsideZipFile = oTempZipFile.foGetChild("cFileSystemItem test child.zip");
+#  print("*** Creating %s" % oTempZipFileInsideZipFile.sPath);
+#  oTempZipFileInsideZipFile.fCreateAsZipFile(bParseZipFiles = True);
+#  oTempTextFileInsideZipFileInsideZipFile = oTempZipFileInsideZipFile.foGetChild("cFileSystemItem test.text");
+#  print("*** Creating %s" % oTempTextFileInsideZipFileInsideZipFile.sPath);
+#  oTempTextFileInsideZipFileInsideZipFile.fWrite(b"test");
+#  oTempTextFileDirectReference = cFileSystemItem(oTempTextFileInsideZipFileInsideZipFile.sPath);
+#  print("*** Reading %s" % oTempTextFileDirectReference.sPath);
+#  assert oTempTextFileDirectReference.fsbRead() == b"test";
+#  print("*** Deleting %s" % oTempZipFile.sPath);
+#  oTempZipFile.fDelete();
   
 except Exception as oException:
   if m0DebugOutput:

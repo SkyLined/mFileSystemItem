@@ -1,20 +1,19 @@
 import os, threading;
 
-def fsGetNormalizedPath(sPath, sBasePath = None):
-  def fsNormalizePathInternal(sBase, sPath, bAbsolute = False):
-    assert sBase is None or sBase.endswith(os.sep) or sBase.endswith(":"), \
-        "Base (%s) must end with separator" % repr(sBase);
+def fsGetNormalizedPath(s0Path, sBasePath = None):
+  def fsNormalizePathInternal(s0Base, sPath):
+    assert s0Base is None or s0Base.endswith(os.sep) or s0Base.endswith(":"), \
+        "Base (%s) must end with separator" % repr(s0Base);
     sNormalizedPath = os.path.normpath(sPath).rstrip(os.sep);
-    assert not sNormalizedPath.startswith(os.sep) and not (len(sNormalizedPath) >= 2 and sNormalizedPath[1] == ":"), \
-        "Cannot normalize %s" % repr(sPath);
+    if os.name == "nt":
+      assert not sNormalizedPath.startswith(os.sep) and not (len(sNormalizedPath) >= 2 and sNormalizedPath[1] == ":"), \
+          "Cannot normalize %s" % repr(sPath);
     if sNormalizedPath == ".":
-      assert sBase, \
+      assert s0Base, \
           "Cannot normalize absolute path %s" % repr(sPath);
       sNormalizedPath = "";
-    return sBase + sNormalizedPath;
-  if not sPath:
-    sPath = os.getcwd();
-  sOriginalPath = sPath;
+    return ((s0Base or "") + sNormalizedPath) or os.sep;
+  sOriginalPath = sPath = s0Path or os.getcwd();
   if not isinstance(sPath, str):
     sPath = str(sPath, "cp437");
   if sPath.startswith("\\\\.\\"): # Physical drive

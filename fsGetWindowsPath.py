@@ -1,6 +1,8 @@
 import os;
 
 def fsGetWindowsPath(sPath):
+  if os.name != 'nt':
+    return sPath; # Not on Windows: same as original.
   if not sPath.startswith(r"\\"):
     sDrive, sPath = os.path.splitdrive(sPath);
     if not sDrive:

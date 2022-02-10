@@ -1,12 +1,17 @@
+import os;
+
+if os.name == 'nt':
+  from mWindowsSDK.mKernel32 import oKernel32DLL;
+  from mWindowsSDK import *;
+
 from .fsGetWindowsPath import fsGetWindowsPath;
 
-from mWindowsSDK import *;
-
 def fs0GetDOSPath(sPath):
+  if os.name != 'nt':
+    return sPath; # Not on Windows: same as original.
   sWindowsPath = fsGetWindowsPath(sPath);
   if not os.path.exists(sWindowsPath):
     return None;
-  from mWindowsSDK.mKernel32 import oKernel32DLL;
   opsWindowsPath = LPCWSTR(foCreateBuffer(sWindowsPath), bCast = True);
   odwRequiredBufferSizeInChars = oKernel32DLL.GetShortPathNameW(
     opsWindowsPath,

@@ -4,7 +4,9 @@
     "mDebugOutput"
   ],
   "a0sDependentOnProductNames": [
-    "mNotProvided",
+    "mNotProvided"
+  ],
+  "a0sReleaseAdditionalProductNames": [
     "mWindowsSDK"
   ],
   "asProductTypes": [

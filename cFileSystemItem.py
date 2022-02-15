@@ -1229,7 +1229,7 @@ class cFileSystemItem(object):
     assert oSelf.__fbDelete(bClose, bParseZipFiles, bThrowErrors = True, bSanityChecks = True);
   @ShowDebugOutput
   def fbDelete(oSelf, bClose = False, bParseZipFiles = True, bThrowErrors = False):
-    oSelf.__fbDelete(bClose, bParseZipFiles, bThrowErrors, bSanityChecks = True);
+    return oSelf.__fbDelete(bClose, bParseZipFiles, bThrowErrors, bSanityChecks = True);
   def __fbDelete(oSelf, bClose, bParseZipFiles, bThrowErrors, bSanityChecks):
     if bSanityChecks:
       try:

@@ -1417,7 +1417,7 @@ class cFileSystemItem(object):
           sbData = oPyFile.read();
           fShowDebugOutput("Writing %d bytes (%s) to %s..." % (
             len(sbData),
-            sbData if len(sbData) < 10 else repr(sbData[:7] + "..."),
+            sbData if len(sbData) < 10 else repr(sbData[:7] + b"..."),
             sZipInternalPath)
           );
           oSelf.__o0PyZipFile.writestr(sZipInternalPath, sbData, zipfile.ZIP_DEFLATED);

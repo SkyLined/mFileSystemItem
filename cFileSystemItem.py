@@ -1422,6 +1422,10 @@ class cFileSystemItem(object):
           );
           oSelf.__o0PyZipFile.writestr(sZipInternalPath, sbData, zipfile.ZIP_DEFLATED);
         except:
+          # We want to catch any exceptions related to writing the data here, and
+          # handle them if `bThrowErrors` is False. However, we want to still throw
+          # any unexpected exceptions.
+          raise;
           if bThrowErrors:
             raise;
           return False;

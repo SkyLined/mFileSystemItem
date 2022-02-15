@@ -1490,7 +1490,7 @@ class cFileSystemItem(object):
           "Cannot get compressed sized of a file that is open for writing; please close it first!";
       return None;
     o0PyZipInfo = oSelf.__fo0GetZipInfoForZipFileDescendant(sPath, bThrowErrors);
-    return oPyZipInfo.compress_size if o0PyZipInfo else None;
+    return o0PyZipInfo.compress_size if o0PyZipInfo else None;
   
   def __fo0GetZipInfoForZipFileDescendant(oSelf, sPath, bThrowErrors):
     bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);

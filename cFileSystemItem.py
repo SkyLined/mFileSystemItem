@@ -1,5 +1,4 @@
-﻿import os, re, zipfile;
-from io import BytesIO;
+﻿import os, zipfile;
 
 try: # mDebugOutput use is Optional
   from mDebugOutput import ShowDebugOutput, fShowDebugOutput;
@@ -247,24 +246,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fu0GetSize(oSelf, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fu0GetSize(bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fu0GetSize(oSelf, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      pass;
-    if bParseZipFiles:
-      o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors);
-      if o0ZipRoot:
-        u0Size = o0ZipRoot.__fu0GetSizeOfZipFileDescendant(oSelf.sPath, bThrowErrors);
-        fShowDebugOutput("got info from its zip file ancestor %s" % o0ZipRoot.sPath);
-        return u0Size;
-    try:
-      uSize = os.path.getsize(oSelf.sWindowsPath);
-    except Exception as oException:
-      if bThrowErrors:
-        raise;
-      fShowDebugOutput("cannot get info from the file system");
-      return None;
-    fShowDebugOutput("got info from the file system");
-    return uSize;
+  from .cFileSystemItem_fu0GetSize \
+      import cFileSystemItem_fu0GetSize \
+      as __fu0GetSize;
   
   @ShowDebugOutput
   def fuGetCompressedSize(oSelf):
@@ -272,17 +256,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fu0GetCompressedSize(oSelf, bThrowErrors = False):
     return oSelf.__fu0GetCompressedSize(bThrowErrors, bSanityChecks = True);
-  def __fu0GetCompressedSize(oSelf, bThrowErrors, bSanityChecks): # bParseZipFiles == True is implied
-    if bSanityChecks:
-      pass;
-    o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors);
-    if not o0ZipRoot:
-      assert not bThrowErrors, \
-          "Cannot get compressed size of %s because it is not in a zip file" % oSelf.sPath;
-      fShowDebugOutput("not found inside its zip file ancestor");
-      return None;
-    u0Size = o0ZipRoot.__fu0GetCompressedSizeOfZipFileDescendant(oSelf.sPath, bThrowErrors);
-    return u0Size;
+  from .cFileSystemItem_fu0GetCompressedSize \
+      import cFileSystemItem_fu0GetCompressedSize \
+      as __fu0GetCompressedSize;
   
   @ShowDebugOutput
   def fbExists(oSelf, bParseZipFiles = False, bThrowErrors = False):
@@ -422,51 +398,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbCreateAsFolder(oSelf, bCreateParents = False, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fbCreateAsFolder(bCreateParents, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fbCreateAsFolder(oSelf, bCreateParents, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot create folder %s when it is already open as a zip file!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot create folder %s when it is already open as a file!" % oSelf.sPath;
-        assert not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot create folder %s when it already exists as a file!" % oSelf.sPath;
-        assert not oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot create folder %s when it already exists!" % oSelf.sPath;
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    if bParseZipFiles and oSelf.fbIsInsideZipFile(bThrowErrors = bThrowErrors):
-      # Zip files cannot have folders, so we will do nothing here. If a file is
-      # created in this folder or one of its sub-folders, this folder will 
-      # magically start to exist; in effect folders are virtual.
-      fShowDebugOutput("folder in zip files are virtual");
-      return True;
-    else:
-      if (
-        oSelf.o0Parent
-        and not oSelf.o0Parent.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-      ):
-        if not bCreateParents:
-          assert not bThrowErrors, \
-              "Cannot create folder %s when its parent does not exist!" % oSelf.sPath;
-          return False;
-        if not oSelf.o0Parent.fbCreateAsParent(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-          fShowDebugOutput("cannot create parent");
-          return False;
-      try:
-        os.makedirs(oSelf.sWindowsPath);
-      except Exception as oException:
-        if bThrowErrors:
-          raise;
-        fShowDebugOutput("cannot create folder(s): %s" % repr(oException));
-        return False;
-      if not os.path.isdir(oSelf.sWindowsPath):
-        fShowDebugOutput("makedirs succeeded but folder does not exist");
-        return False;
-    fShowDebugOutput("folder created");
-    return True;
+  from .cFileSystemItem_fbCreateAsFolder \
+      import cFileSystemItem_fbCreateAsFolder \
+      as __fbCreateAsFolder;
   
   @ShowDebugOutput
   def faoGetChildren(oSelf, bParseZipFiles = False):
@@ -474,32 +408,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fa0oGetChildren(oSelf, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fa0oGetChildren(bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fa0oGetChildren(oSelf, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      pass;
-    if bParseZipFiles and oSelf.fbIsValidZipFile(bThrowErrors = bThrowErrors):
-      asChildNames = oSelf.__fasGetChildNamesOfZipFileDescendant(oSelf.sPath, bThrowErrors);
-    else:
-      o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
-      if o0ZipRoot:
-        asChildNames = o0ZipRoot.__fasGetChildNamesOfZipFileDescendant(oSelf.sPath, bThrowErrors);
-      elif oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        try:
-          asChildNames = os.listdir(oSelf.sWindowsPath)
-        except Exception as oException:
-          if bThrowErrors:
-            raise;
-          fShowDebugOutput("cannot list folder: %s" % oException);
-          return None;
-      elif bParseZipFiles and oSelf.fbIsValidZipFile(bThrowErrors = bThrowErrors):
-        asChildNames = oSelf.__fasGetChildNamesOfZipFileDescendant(oSelf.sPath, bThrowErrors);
-      else:
-        fShowDebugOutput("not a folder%s" % (" or zip file" if bParseZipFiles else ""));
-        return None;
-    return [
-      oSelf.__class__(oSelf.sPath + os.sep + sChildName, oSelf)
-      for sChildName in sorted(asChildNames)
-    ];
+  from .cFileSystemItem_fa0oGetChildren \
+      import cFileSystemItem_fa0oGetChildren \
+      as __fa0oGetChildren;
   
   @ShowDebugOutput
   def foGetChild(oSelf, sChildName, bParseZipFiles = False, bFixCase = False):
@@ -507,45 +418,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fo0GetChild(oSelf, sChildName, bParseZipFiles = False, bFixCase = False, bThrowErrors = False):
     return oSelf.__fo0GetChild(sChildName, bParseZipFiles, bFixCase, bThrowErrors, bSanityChecks = True);
-  def __fo0GetChild(oSelf, sChildName, bParseZipFiles, bFixCase, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert os.sep not in sChildName and (os.altsep is None or os.altsep not in sChildName), \
-            "Cannot create a child %s!" % sChildName;
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    if bParseZipFiles and oSelf.fbIsValidZipFile(bThrowErrors = bThrowErrors):
-     asChildNames = oSelf.__fasGetChildNamesOfZipFileDescendant(oSelf.sPath, bThrowErrors);
-    else:
-      o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
-      if o0ZipRoot:
-        asChildNames = o0ZipRoot.__fasGetChildNamesOfZipFileDescendant(oSelf.sPath, bThrowErrors) \
-            if bParseZipFiles else [];
-      elif (
-        oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-        and bFixCase
-      ):
-        try:
-          asChildNames = os.listdir(oSelf.sWindowsPath);
-        except:
-          if bThrowErrors:
-            raise;
-          asChildNames = [];
-      else:
-        asChildNames = [];
-    # Look for an existing child that has the same name but different casing
-    sLowerChildName = sChildName.lower();
-    for sRealChildName in asChildNames:
-      if sRealChildName.lower() == sLowerChildName:
-        # Found one: use that name instead.
-        sChildName = sRealChildName;
-        break;
-    oChild = oSelf.__class__(oSelf.sPath + os.sep + sChildName, oSelf);
-    assert oSelf.fsGetRelativePathTo(oChild, bThrowErrors = bThrowErrors) == sChildName, \
-        "Creating a child %s of %s resulted in a child path %s!" % (sChildName, oSelf.sPath, oChild.sPath);
-    return oChild;
+  from .cFileSystemItem_fo0GetChild \
+      import cFileSystemItem_fo0GetChild \
+      as __fo0GetChild;
   
   @ShowDebugOutput
   def faoGetDescendants(oSelf, bParseZipFiles = False, bParseDescendantZipFiles = False):
@@ -553,31 +428,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fa0oGetDescendants(oSelf, bParseZipFiles = False, bParseDescendantZipFiles = False, bThrowErrors = False):
     return oSelf.__fa0oGetDescendants(bParseZipFiles, bParseDescendantZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fa0oGetDescendants(oSelf, bParseZipFiles, bParseDescendantZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      pass;
-    aoDescendants = [];
-    a0oChildren = oSelf.fa0oGetChildren(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
-    if a0oChildren is None:
-      fShowDebugOutput("cannot get list of children");
-      return None;
-    for oChild in a0oChildren:
-      aoDescendants.append(oChild);
-      if (
-        oChild.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-        or (
-          bParseDescendantZipFiles
-          and oChild.fbIsValidZipFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-        )
-      ):
-        # oSelf or its parents can only be zip files if bParseZipFiles was true. If oSelf nor any of its
-        # parents were zip files, setting bParseZipFiles has no affect. So we can use bParseZipFiles = true
-        aoDescendants += oChild.fa0oGetDescendants(
-          bThrowErrors = bThrowErrors,
-          bParseZipFiles = bParseZipFiles,
-          bParseDescendantZipFiles = bParseDescendantZipFiles,
-        ) or [];
-    return aoDescendants;
+  from .cFileSystemItem_fa0oGetDescendants \
+      import cFileSystemItem_fa0oGetDescendants \
+      as __fa0oGetDescendants;
   
   @ShowDebugOutput
   def foGetDescendant(oSelf, sDescendantRelativePath, bFixCase = False, bParseZipFiles = False):
@@ -585,35 +438,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fo0GetDescendant(oSelf, sDescendantRelativePath, bFixCase = False, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fo0GetDescendant(sDescendantRelativePath, bFixCase, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fo0GetDescendant(oSelf, sDescendantRelativePath, bFixCase, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      pass;
-    # Get the first part: up until the folder separator
-    sChildName = sDescendantRelativePath.split(os.sep, 1)[0];
-    if os.altsep:
-      # If there is an alternative folder separator, apply that too:
-      sChildName = sChildName.split(os.altsep, 1)[0];
-    assert sChildName, \
-        "Cannot get descendant %s of %s because the path is absolute!" % (sDescendantRelativePath, oSelf.sPath);
-    sChildDescendantPath = sDescendantRelativePath[len(sChildName) + 1:];
-    o0Child = oSelf.fo0GetChild(
-      sChildName,
-      bFixCase = bFixCase,
-      bParseZipFiles = bParseZipFiles,
-      bThrowErrors = bThrowErrors,
-    );
-    if o0Child is None:
-      return None;
-    o0Descendant = (
-      o0Child if not sChildDescendantPath else \
-      o0Child.fo0GetDescendant(
-        sChildDescendantPath,
-        bFixCase = bFixCase,
-        bParseZipFiles = bParseZipFiles,
-        bThrowErrors = bThrowErrors,
-      )
-    );
-    return o0Descendant;
+  from .cFileSystemItem_fo0GetDescendant \
+      import cFileSystemItem_fo0GetDescendant \
+      as __fo0GetDescendant;
   
   @ShowDebugOutput
   def fSetAsCurrentWorkingDirectory(oSelf):
@@ -621,114 +448,21 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbSetAsCurrentWorkingDirectory(oSelf, bThrowErrors = False):
     return oSelf.__fbSetAsCurrentWorkingDirectory(bThrowErrors, bSanityChecks = True);
-  def __fbSetAsCurrentWorkingDirectory(oSelf, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        # CWD cannot be a zip file so not bParseZipFiles argument exists.
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot set zip file %s as current working directory!" % oSelf.sPath;
-        assert (
-          not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors)
-          and not oSelf.fbIsFile(bParseZipFiles = False, bThrowErrors = bThrowErrors)
-        ), \
-            "Cannot set file %s as current working directory!" % oSelf.sPath;
-        assert oSelf.fbIsFolder(bParseZipFiles = False, bThrowErrors = bThrowErrors), \
-            "Cannot set folder %s as current working directory if it %s!" % (
-              oSelf.sPath,
-              "is not a folder" if oSelf.fbExists(bParseZipFiles = False, bThrowErrors = bThrowErrors)
-                else "does not exists"
-            );
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    # If the cwd is already the path of this cFileSystemItem, do nothing.
-    if os.getcwd() != oSelf.sPath:
-      # Try using the basic path
-      try:
-        os.chdir(oSelf.sPath);
-      except:
-        pass; # We may need to use the windows path, so don't throw an error yet.
-      if os.getcwd() != oSelf.sPath:
-        # Try using the windows path.
-        try:
-          os.chdir(oSelf.sWindowsPath);
-        except:
-          if bThrowErrors:
-            raise;
-          pass;
-    bSuccess = fsGetWindowsPath(os.getcwd()) == oSelf.sWindowsPath;
-    return bSuccess;
+  from .cFileSystemItem_fbSetAsCurrentWorkingDirectory \
+      import cFileSystemItem_fbSetAsCurrentWorkingDirectory \
+      as __fbSetAsCurrentWorkingDirectory;
   
   @ShowDebugOutput
   def fCreateAsFile(oSelf, sbData = b"", bCreateParents = False, bParseZipFiles = False, bKeepOpen = False):
+    fAssertType("sbData", sbData, bytes);
     assert oSelf.__fbCreateAsFile(sbData, bCreateParents, bParseZipFiles, bKeepOpen, bThrowErrors = True, bSanityChecks = True);
   @ShowDebugOutput
   def fbCreateAsFile(oSelf, sbData = b"", bCreateParents = False, bParseZipFiles = False, bKeepOpen = False, bThrowErrors = False):
+    fAssertType("sbData", sbData, bytes);
     return oSelf.__fbCreateAsFile(sbData, bCreateParents, bParseZipFiles, bKeepOpen, bThrowErrors, bSanityChecks = True);
-  def __fbCreateAsFile(oSelf, sbData, bCreateParents, bParseZipFiles, bKeepOpen, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert oSelf.o0Parent, \
-            "Cannot create file %s as a root node!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot create file %s when it is already open as a zip file!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot create file %s when it is already open as a file!" % oSelf.sPath;
-        assert not oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot create file %s if it already exists%s!" % (
-              oSelf.sPath,
-              " as a folder" if oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-                  else ""
-            );
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
-    if o0ZipRoot:
-      o0PyFile = o0ZipRoot.__fo0CreateZipFileDescendant(oSelf.sPath, sbData, bThrowErrors);
-      if o0PyFile is None:
-        fShowDebugOutput("Cannot create file in zip file");
-        return False;
-      if not bKeepOpen:
-        assert o0ZipRoot.__fbCloseZipFileDescendantPyFile(oSelf.sPath, o0PyFile, bThrowErrors), \
-            "Cannot close %s" % oSelf.sPath;
-      else:
-        oSelf.__o0PyFile = o0PyFile;
-        oSelf.__bPyFileIsInsideZipFile = True;
-        oSelf.__bWasReadOnlyBeforeOpen = False;
-        oSelf.__bWasHiddenBeforeOpen = False;
-        oSelf.__bWritable = True;
-      return True;
-    if not oSelf.o0Parent.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      if not bCreateParents:
-        assert not bThrowErrors, \
-            "Cannot create file %s when its parent does not exist!" % oSelf.sPath;
-        return False;
-      if not oSelf.o0Parent.fbCreateAsParent(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        fShowDebugOutput("Cannot create parent");
-        return False;
-    try:
-      oSelf.__o0PyFile = open(oSelf.sWindowsPath, "wb");
-      oSelf.__bPyFileIsInsideZipFile = False;
-      oSelf.__bWasReadOnlyBeforeOpen = False;
-      oSelf.__bWasHiddenBeforeOpen = False;
-      oSelf.__bWritable = True;
-      try:
-        oSelf.__o0PyFile.write(sbData);
-      finally:
-        if not bKeepOpen:
-          oSelf.__o0PyFile.close();
-          oSelf.__o0PyFile = None;
-          oSelf.__bPyFileIsInsideZipFile = False;
-          oSelf.__bWritable = False;
-      return True;
-    except Exception as oException:
-      if bThrowErrors:
-        raise;
-      fShowDebugOutput("Exception: %s" % repr(oException));
-      return False;
+  from .cFileSystemItem_fbCreateAsFile \
+      import cFileSystemItem_fbCreateAsFile \
+      as __fbCreateAsFile;
   
   @ShowDebugOutput
   def fOpenAsFile(oSelf, bWritable = False, bAppend = False, bParseZipFiles = False):
@@ -736,45 +470,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbOpenAsFile(oSelf, bWritable = False, bAppend = False, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fbOpenAsFile(bWritable, bAppend, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fbOpenAsFile(oSelf, bWritable, bAppend, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot open file %s when it is already open as a zip file!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot open file %s twice!" % oSelf.sPath;
-        assert oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot open file %s when it %s!" % (
-              oSelf.sPath,
-              "is not a file" if oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-                  else "does not exist"
-            );
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
-    if o0ZipRoot:
-      oSelf.__o0PyFile = o0ZipRoot.__fo0OpenZipFileDescendantAsPyFile(oSelf.sPath, bWritable, bThrowErrors);
-      if not oSelf.__o0PyFile:
-        fShowDebugOutput("Cannot open file in zip file");
-        return False;
-      oSelf.__bPyFileIsInsideZipFile = True;
-      oSelf.__bWasReadOnlyBeforeOpen = False;
-      oSelf.__bWasHiddenBeforeOpen = False;
-    else:
-      oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
-      try:
-        oSelf.__o0PyFile = open(oSelf.sWindowsPath, ("a+b" if bAppend else "wb") if bWritable else "rb");
-      except Exception as oException:
-        oSelf.__fReapplyAccessLimitingAttributesAfterOperation();
-        if bThrowErrors:
-          raise;
-        fShowDebugOutput("Exception: %s" % repr(oException));
-        return False;
-      oSelf.__bPyFileIsInsideZipFile = False;
-    oSelf.__bWritable = bWritable;
-    return True;
+  from .cFileSystemItem_fbOpenAsFile \
+    import cFileSystemItem_fbOpenAsFile \
+    as __fbOpenAsFile;
   
   @ShowDebugOutput
   def fsbRead(oSelf, bKeepOpen = None, bParseZipFiles = True):
@@ -782,151 +480,31 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fsb0Read(oSelf, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
     return oSelf.__fsb0Read(bKeepOpen, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fsb0Read(oSelf, bKeepOpen, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
-      try:
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot read file %s when it is open as a zip file!" % oSelf.sPath;
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    # Keep the file open if it is already open, or the special argument is provided.
-    # Close or keep the file open depending on the argument, or whether it is currently open if it is not provided.
-    bIsOpen = oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors);
-    bKeepOpen = bKeepOpen if bKeepOpen is not None else bIsOpen; 
-    # Make sure the file is open
-    if not bIsOpen:
-      if not oSelf.fbOpenAsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        fShowDebugOutput("cannot open file");
-        return None;
-    try:
-      sbData = oSelf.__o0PyFile.read();
-    except Exception as oException:
-      if bThrowErrors:
-        raise;
-      fShowDebugOutput("Exception: %s" % oException);
-      return None;
-    finally:
-      if not bKeepOpen:
-        # This must always succeed, so it will always throw errors if it does not.
-        oSelf.fClose();
-    return sbData;
+  from .cFileSystemItem_fsb0Read \
+      import cFileSystemItem_fsb0Read \
+      as __fsb0Read;
   
   @ShowDebugOutput
   def fWrite(oSelf, sbData, bAppend = False, bCreateParents = False, bKeepOpen = None, bParseZipFiles = True):
+    fAssertType("sbData", sbData, bytes);
     assert oSelf.__fbWrite(sbData, bAppend, bCreateParents, bKeepOpen, bParseZipFiles, bThrowErrors = True, bSanityChecks = True);
   @ShowDebugOutput
   def fbWrite(oSelf, sbData, bAppend = False, bCreateParents = False, bKeepOpen = None, bParseZipFiles = True, bThrowErrors = False):
+    fAssertType("sbData", sbData, bytes);
     return oSelf.__fbWrite(sbData, bAppend, bCreateParents, bKeepOpen, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fbWrite(oSelf, sbData, bAppend, bCreateParents, bKeepOpen, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        # Note that we assume that the caller wants us to parse zip files, unlike most other functions!
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot write file %s when it is open as a zip file!" % oSelf.sPath;
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    # Close or keep the file open depending on the argument, or whether it is currently open if it is not provided.
-    bIsOpen = oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors);
-    bKeepOpen = bKeepOpen if bKeepOpen is not None else bIsOpen; 
-    # Make sure the file is open and writable
-    if not bIsOpen:
-      if not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        if not oSelf.__fbCreateAsFile(sbData, bCreateParents, bParseZipFiles, bKeepOpen, bThrowErrors, bSanityChecks = True):
-          fShowDebugOutput("cannot create file");
-          return False;
-        return True;
-      if not oSelf.fbOpenAsFile(
-        bWritable = True,
-        bAppend = bAppend,
-        bParseZipFiles = bParseZipFiles,
-        bThrowErrors = bThrowErrors,
-      ):
-        fShowDebugOutput("cannot open file");
-        return False;
-    try:
-      oSelf.__o0PyFile.write(sbData);
-    except Exception as oException:
-      if bThrowErrors:
-        raise;
-      fShowDebugOutput("Exception: %s" % oException);
-      return False;
-    finally:
-      if not bKeepOpen:
-        # This should alwyas succeed so it will always throw errors if it does not.
-        oSelf.fClose();
-    return True;
-  
+  from .cFileSystemItem_fbWrite \
+      import cFileSystemItem_fbWrite \
+      as __fbWrite;
+    
   @ShowDebugOutput
   def fCreateAsZipFile(oSelf, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False):
     assert oSelf.__fbCreateAsZipFile(bKeepOpen, bCreateParents, bParseZipFiles, bThrowErrors = True, bSanityChecks = True);
   @ShowDebugOutput
   def fbCreateAsZipFile( oSelf, bKeepOpen = False, bCreateParents = False, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fbCreateAsZipFile(bKeepOpen, bCreateParents, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  @ShowDebugOutput
-  def __fbCreateAsZipFile(oSelf, bKeepOpen, bCreateParents, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert oSelf.o0Parent, \
-            "Cannot create zip file %s as a root node!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot create zip file %s when it is already open as a zip file!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot create zip file %s when it is already open as a file!" % oSelf.sPath;
-        assert not oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot create zip file %s if it already exists!" % oSelf.sPath;
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
-    if o0ZipRoot:
-      oSelf.__o0PyFile = o0ZipRoot.__fo0OpenZipFileDescendantAsPyFile(oSelf.sPath, bWritable = True, bThrowErrors = bThrowErrors);
-      if not oSelf.__o0PyFile:
-        fShowDebugOutput("Cannot create file as zip file");
-        return False;
-      oSelf.__bPyFileIsInsideZipFile = True;
-    else:
-      if not oSelf.o0Parent.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        if not bCreateParents:
-          assert not bThrowErrors, \
-              "Cannot create folder %s when its parent does not exist!" % oSelf.sPath;
-          return False;
-        if not oSelf.o0Parent.fbCreateAsParent(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-          return False;
-      # Open/create the file as writable and truncate it if it already existed.
-      try:
-        oSelf.__o0PyFile = open(oSelf.sWindowsPath, "wb");
-      except:
-        if bThrowErrors:
-          raise;
-        return False;
-      oSelf.__bPyFileIsInsideZipFile = False;
-    oSelf.__bWasReadOnlyBeforeOpen = False;
-    oSelf.__bWasHiddenBeforeOpen = False;
-    oSelf.__bWritable = True;
-    try:
-      oSelf.__o0PyFile.write(b"");
-      oSelf.__o0PyZipFile = zipfile.ZipFile(oSelf.__o0PyFile, "w");
-      oSelf.__do0PyZipInfo_by_sZipInternalPath = {};
-    except:
-      # This should always succeed so it will always throw errors if it does not
-      oSelf.fClose();
-      if bThrowErrors:
-        raise;
-      return False;
-    if not bKeepOpen:
-      # This should always succeed so it will always throw errors if it does not
-      oSelf.fClose();
-    fShowDebugOutput("Created zip file%s%s..." % (
-      " inside another zip file" if oSelf.__bPyFileIsInsideZipFile else "",
-      " and left it open" if bKeepOpen else "",
-    ));
-    return True;
+  from .cFileSystemItem_fbCreateAsZipFile \
+      import cFileSystemItem_fbCreateAsZipFile \
+      as __fbCreateAsZipFile;
   
   @ShowDebugOutput
   def fOpenAsZipFile(oSelf, bWritable = False, bParseZipFiles = False, bThrowErrors = False):
@@ -934,58 +512,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbOpenAsZipFile(oSelf, bWritable = False, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fbOpenAsZipFile(bWritable, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fbOpenAsZipFile(oSelf, bWritable, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        # Note that bParseZipFiles applies to its parents.
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot open zip file %s twice!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot open zip file %s when it is already open as a file!" % oSelf.sPath;
-        assert oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot open zip file %s when it %s!" % (
-              oSelf.sPath,
-              "is not a file" if oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-                  else "does not exist",
-            );
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
-    if o0ZipRoot:
-      oSelf.__o0PyFile = o0ZipRoot.__fo0OpenZipFileDescendantAsPyFile(oSelf.sPath, bWritable, bThrowErrors);
-      if not oSelf.__o0PyFile:
-        return False;
-      oSelf.__bPyFileIsInsideZipFile = True;
-      oSelf.__bWasReadOnlyBeforeOpen = False;
-      oSelf.__bWasHiddenBeforeOpen = False;
-    else:
-      oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
-      try:
-        oSelf.__o0PyFile = open(oSelf.sWindowsPath, "a+b" if bWritable else "rb");
-      except:
-        oSelf.__fReapplyAccessLimitingAttributesAfterOperation();
-        if bThrowErrors:
-          raise;
-        return False;
-      oSelf.__bPyFileIsInsideZipFile = False;
-    try:
-      oSelf.__o0PyZipFile = zipfile.ZipFile(
-        oSelf.__o0PyFile,
-        "a" if bWritable else "r",
-        zipfile.ZIP_DEFLATED,
-      );
-      oSelf.__do0PyZipInfo_by_sZipInternalPath = None;
-      fShowDebugOutput("Opened for %s." % ("appending" if bWritable else "reading"));
-      oSelf.__bWritable = bWritable;
-      return True;
-    except:
-      # This should always succeed so it will always throw errors if it does not
-      oSelf.fClose();
-      if bThrowErrors:
-        raise;
-      return False;
+  from .cFileSystemItem_fbOpenAsZipFile \
+      import cFileSystemItem_fbOpenAsZipFile \
+      as __fbOpenAsZipFile;
   
   @ShowDebugOutput
   def fCreateAsParent(oSelf, bParseZipFiles = False):
@@ -993,67 +522,10 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbCreateAsParent(oSelf, bParseZipFiles = False, bThrowErrors = False):
     return oSelf.__fbCreateAsParent(bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fbCreateAsParent(oSelf, bParseZipFiles, bThrowErrors, bSanityChecks):
-    bIsZipFile = oSelf.s0Extension and oSelf.s0Extension.lower() == "zip";
-    sCreateAsType = "zip file" if bIsZipFile else "folder";
-    if bSanityChecks:
-      try:
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot create %s %s when it is already open as a zip file!" % (sCreateAsType, oSelf.sPath);
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot create %s %s when it is already open as a file!" % (sCreateAsType, oSelf.sPath);
-        assert not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot create %s %s when it already exists as a file!" % (sCreateAsType, oSelf.sPath);
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-    if not bIsZipFile and bParseZipFiles:
-      o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors) if bParseZipFiles else None;
-      if o0ZipRoot:
-        # Folders cannot be stored within a zip file; only files can be stored with a relative
-        # path that contain folder names. So, if we are asked to create a parent folder it must
-        # be for such a file that has this parent folder in its path. This means no action is
-        # needed: the folder will magically exists once the file is created. Except that we do
-        # need to create the zip file that contains this folder if it does not exists. If the
-        # file exists, we should check it already exists:
-        if not o0ZipRoot.fbExists(bParseZipFiles = True, bThrowErrors = bThrowErrors):
-          return o0ZipRoot.fbCreateAsZipFile(
-            bCreateParents = True,
-            bParseZipFiles = bParseZipFiles,
-            bThrowErrors = bThrowErrors,
-          );
-        assert o0ZipRoot.fbIsValidZipFile(bParseZipFiles = True, bThrowErrors = bThrowErrors), \
-            "Cannot create folder %s when %s is not a valid zip file!" % (oSelf.sPath, o0ZipRoot.sPath);
-        return True;
-    assert not oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-        "Cannot create %s %s if it already exists as a %s!" % (
-          sCreateAsType,
-          oSelf.sPath,
-          "folder" if oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-              else "file",
-        );
-    assert oSelf.o0Parent, \
-        "Cannot create %s %s as it is a root node!" % (sCreateAsType, oSelf.sPath);
-    if (
-      not oSelf.o0Parent.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors)
-      and not oSelf.o0Parent.fbCreateAsParent(
-        bParseZipFiles = bParseZipFiles,
-        bThrowErrors = bThrowErrors,
-      )
-    ):
-      return False;
-    if bIsZipFile and bParseZipFiles:
-      return oSelf.fbCreateAsZipFile(
-        bCreateParents = True,
-        bParseZipFiles = True,
-        bThrowErrors = bThrowErrors,
-      );
-    return oSelf.fbCreateAsFolder(
-      bCreateParents = True,
-      bParseZipFiles = bParseZipFiles,
-      bThrowErrors = bThrowErrors,
-    );
-  
+  from .cFileSystemItem_fbCreateAsParent \
+      import cFileSystemItem_fbCreateAsParent \
+      as __fbCreateAsParent;
+    
   def fbIsOpenAsFile(oSelf, bThrowErrors = False):
     return oSelf.__o0PyFile is not None and not oSelf.__o0PyZipFile is not None;
   def fbIsOpenAsZipFile(oSelf, bThrowErrors = False):
@@ -1067,48 +539,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbClose(oSelf, bThrowErrors = False):
     return oSelf.__fbClose(bThrowErrors, bSanityChecks = True);
-  def __fbClose(oSelf, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert (
-          oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors)
-          or oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors)
-        ), \
-            "Cannot close %s when it is not open!" % oSelf.sPath;
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    if oSelf.__o0PyZipFile:
-      try:
-        oSelf.__o0PyZipFile.close();
-      except:
-        if bThrowErrors:
-          raise;
-        return False;
-      oSelf.__o0PyZipFile = None;
-      oSelf.__do0PyZipInfo_by_sZipInternalPath = None;
-      fShowDebugOutput("Closed zip file");
-    if oSelf.__o0PyFile:
-      if oSelf.__bPyFileIsInsideZipFile:
-        o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors);
-        assert o0ZipRoot, \
-            "Cannot find zip root for file %s" % (oSelf.sPath,);
-        assert o0ZipRoot.__fbCloseZipFileDescendantPyFile(oSelf.sPath, oSelf.__o0PyFile, bThrowErrors), \
-            "Cannot close zip file %s in zip file %s" % (oSelf.sPath, o0ZipRoot.sPath);
-      else:
-        try:
-          oSelf.__o0PyFile.close();
-        except:
-          if bThrowErrors:
-            raise;
-          return False;
-      oSelf.__fReapplyAccessLimitingAttributesAfterOperation();
-      oSelf.__o0PyFile = None;
-      oSelf.__bPyFileIsInsideZipFile = False;
-      fShowDebugOutput("Closed file");
-    oSelf.__bWritable = False;
-    return True;
+  from .cFileSystemItem_fbClose \
+      import cFileSystemItem_fbClose \
+      as __fbClose;
   
   @ShowDebugOutput
   def fRename(oSelf, sNewName, bParseZipFiles = True):
@@ -1116,45 +549,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbRename(oSelf, sNewName, bParseZipFiles = True, bThrowErrors = False):
     return oSelf.__fbRename(sNewName, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fbRename(oSelf, sNewName, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot rename %s when it is open as a file!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot rename %s when it is open as a zip file!" % oSelf.sPath;
-        if bParseZipFiles:
-          assert not oSelf.fbIsInsideZipFile(bThrowErrors = bThrowErrors), \
-              "Renaming is not implemented within zip files!";
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    assert oSelf.o0Parent, \
-        "Cannot rename root node";
-    o0NewItem = oSelf.o0Parent.fo0GetChild(
-      sNewName,
-      bParseZipFiles = bParseZipFiles,
-      bThrowErrors = bThrowErrors,
-    );
-    if o0NewItem is None:
-      return False;
-    try:
-      os.rename(oSelf.sWindowsPath, o0NewItem.sWindowsPath);
-    except:
-      if bThrowErrors:
-        raise;
-      return False;
-    if not o0NewItem.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return False;
-    oSelf.sPath = o0NewItem.sPath;
-    oSelf.sName = o0NewItem.sName;
-    oSelf.s0Extension = o0NewItem.s0Extension;
-    oSelf.__sWindowsPath = o0NewItem.__sWindowsPath;
-    oSelf.__bWindowsPathSet = o0NewItem.__bWindowsPathSet;
-    oSelf.__sDOSPath = o0NewItem.__sDOSPath;
-    oSelf.__bDOSPathSet = o0NewItem.__bDOSPathSet;
-    return True;
+  from .cFileSystemItem_fbRename \
+      import cFileSystemItem_fbRename \
+      as __fbRename;
   
   @ShowDebugOutput
   def fMove(oSelf, oNewItem, bParseZipFiles = True):
@@ -1162,37 +559,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbMove(oSelf, oNewItem, bParseZipFiles = True, bThrowErrors = False):
     return oSelf.__fbMove(oNewItem, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  @ShowDebugOutput
-  def __fbMove(oSelf, oNewItem, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-            "Cannot rename %s when it is open as a file!" % oSelf.sPath;
-        assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-            "Cannot rename %s when it is open as a zip file!" % oSelf.sPath;
-        if bParseZipFiles:
-          assert not oSelf.fbIsInsideZipFile(bThrowErrors = bThrowErrors), \
-              "moving is not implemented within zip files!";
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    try:
-      os.rename(oSelf.sWindowsPath, oNewItem.sWindowsPath);
-    except:
-      if bThrowErrors:
-        raise;
-      return False;
-    if not oNewItem.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return False;
-    oSelf.sPath = oNewItem.sPath;
-    oSelf.sName = oNewItem.sName;
-    oSelf.s0Extension = oNewItem.s0Extension;
-    oSelf.__sWindowsPath = oNewItem.__sWindowsPath;
-    oSelf.__bWindowsPathSet = oNewItem.__bWindowsPathSet;
-    oSelf.__sDOSPath = oNewItem.__sDOSPath;
-    oSelf.__bDOSPathSet = oNewItem.__bDOSPathSet;
-    return True;
+  from .cFileSystemItem_fbMove \
+      import cFileSystemItem_fbMove \
+      as __fbMove;
   
   @ShowDebugOutput
   def fDeleteDescendants(oSelf, bClose = False, bParseZipFiles = True):
@@ -1200,29 +569,9 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbDeleteDescendants(oSelf, bClose = False, bParseZipFiles = True, bThrowErrors = False):
     return oSelf.__fbDeleteDescendants(bClose, bParseZipFile, bThrowErrors, bSanityChecks = True);
-  def __fbDeleteDescendants(oSelf, bClose, bParseZipFile, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        if not bClose:
-          assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-              "Cannot delete %s when it is open as a zip file!" % oSelf.sPath;
-          assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-              "Cannot delete %s when it is open as a file!" % oSelf.sPath;
-        assert not oSelf.fbIsFile(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors), \
-            "Cannot delete descendants of %s when it is a file!" % oSelf.sPath;
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    if bClose and not oSelf.fbClose(bThrowErrors = bThrowErrors):
-      return False;
-    a0oChildren = oSelf.fa0oGetChildren(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
-    if a0oChildren is None:
-      return False;
-    for oChild in a0oChildren:
-      if not oChild.fbDelete(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-        return False;
-    return True;
+  from .cFileSystemItem_fbDeleteDescendants \
+      import cFileSystemItem_fbDeleteDescendants \
+      as __fbDeleteDescendants;
   
   @ShowDebugOutput
   def fDelete(oSelf, bClose = False, bParseZipFiles = True):
@@ -1230,292 +579,47 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def fbDelete(oSelf, bClose = False, bParseZipFiles = True, bThrowErrors = False):
     return oSelf.__fbDelete(bClose, bParseZipFiles, bThrowErrors, bSanityChecks = True);
-  def __fbDelete(oSelf, bClose, bParseZipFiles, bThrowErrors, bSanityChecks):
-    if bSanityChecks:
-      try:
-        if not bClose:
-          assert not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors), \
-              "Cannot delete %s when it is open as a zip file!" % oSelf.sPath;
-          assert not oSelf.fbIsOpenAsFile(bThrowErrors = bThrowErrors), \
-              "Cannot delete %s when it is open as a file!" % oSelf.sPath;
-        if bParseZipFiles:
-          assert not oSelf.fbIsInsideZipFile(bThrowErrors = bThrowErrors), \
-              "Deleting is not implemented within zip files!";
-      except AssertionError:
-        if bThrowErrors:
-          raise;
-        return False;
-    if bClose and not oSelf.fbClose(bThrowErrors = bThrowErrors):
-      return False;
-    # Handle descendants if any
-    bIsFolder = oSelf.fbIsFolder(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors);
-    if bIsFolder and not oSelf.fbDeleteDescendants(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      return False;
-    # Remive hidden/read-only attributes;
-    oSelf.__fRemoveAccessLimitingAttributesBeforeOperation();
-    # Delete folder or file
-    try:
-      os.rmdir(oSelf.sWindowsPath) if bIsFolder else os.remove(oSelf.sWindowsPath);
-    except:
-      if bThrowErrors:
-        raise;
-      return False;
-    # Make sure it no longer exists
-    if oSelf.fbExists(bParseZipFiles = bParseZipFiles, bThrowErrors = bThrowErrors):
-      if bThrowErrors:
-        raise AssertionError("Folder %s exists after being removed!?" % oSelf.sPath);
-      return False;
-    return True;
+  from .cFileSystemItem_fbDelete \
+      import cFileSystemItem_fbDelete \
+      as __fbDelete;
   
-  @property
-  def __doPyZipInfo_by_sZipInternalPath(oSelf):
-    if oSelf.__do0PyZipInfo_by_sZipInternalPath is None:
-      oSelf.__do0PyZipInfo_by_sZipInternalPath = dict([
-        (oPyZipInfo.filename, oPyZipInfo)
-        for oPyZipInfo in oSelf.__o0PyZipFile.infolist()
-      ]);
-    return oSelf.__do0PyZipInfo_by_sZipInternalPath;
-  
-  @ShowDebugOutput
-  def __fbZipFileContainsDescendant(oSelf, sPath, bThrowErrors):
-    bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
-    if bMustBeClosed:
-      assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
-          "Cannot check if %s contains %s if it cannot be opened!" % (oSelf.sPath, sPath);
-    try:
-      sWantedZipInternalPath = oSelf.fsGetRelativePathTo(
-        sPath,
-        bThrowErrors = bThrowErrors,
-      ).replace("\\", "/");
-      for sZipInternalPath in oSelf.__doPyZipInfo_by_sZipInternalPath.keys():
-        if (
-          sZipInternalPath.startswith(sWantedZipInternalPath)
-          and sZipInternalPath[len(sWantedZipInternalPath):len(sWantedZipInternalPath) + 1] in ["", os.sep]
-        ):
-          return True;
-      return False;
-    finally:
-      if bMustBeClosed:
-        assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
-            "Cannot close %s" % oSelf.sPath;
-  
-  @ShowDebugOutput
-  def __fbZipFileContainsDescendantFolder(oSelf, sPath, bThrowErrors):
-    bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
-    if bMustBeClosed:
-      assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
-          "Cannot check if %s contains a folder %s if it cannot be opened!" % (oSelf.sPath, sPath);
-    try:
-      sWantedZipInternalPathHeader = oSelf.fsGetRelativePathTo(
-        sPath,
-        bThrowErrors = bThrowErrors,
-      ).replace("\\", "/") + "/";
-      for sZipInternalPath in oSelf.__doPyZipInfo_by_sZipInternalPath.keys():
-        if sZipInternalPath.startswith(sWantedZipInternalPathHeader):
-          return True;
-      return False;
-    finally:
-      if bMustBeClosed:
-        assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
-            "Cannot close %s" % oSelf.sPath;
-  
-  @ShowDebugOutput
-  def __fbZipFileContainsDescendantFile(oSelf, sPath, bThrowErrors):
-    bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
-    if bMustBeClosed:
-      assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
-          "Cannot check if %s contains a file %s if it cannot be opened!" % (oSelf.sPath, sPath);
-    try:
-      sZipInternalPath = oSelf.fsGetRelativePathTo(
-        sPath,
-        bThrowErrors = bThrowErrors,
-      ).replace("\\", "/");
-      return sZipInternalPath in oSelf.__doPyZipInfo_by_sZipInternalPath.keys();
-    finally:
-      if bMustBeClosed:
-        assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
-            "Cannot close %s" % oSelf.sPath;
-  
-  @ShowDebugOutput
-  def __fo0CreateZipFileDescendant(oSelf, sPath, sbData, bThrowErrors):
-    fAssertType("sbData", sbData, bytes);
-    sZipInternalPath = oSelf.fsGetRelativePathTo(
-      sPath,
-      bThrowErrors = bThrowErrors,
-    ).replace("\\", "/");
-    o0PyFile = oSelf.__fo0OpenZipFileDescendantAsPyFile(sPath, True, bThrowErrors);
-    if not o0PyFile:
-      fShowDebugOutput("zip file descendant cannot be opened");
-      return None;
-    try:
-      o0PyFile.write(sbData);
-    except Exception as oException:
-      if bThrowErrors:
-        raise;
-      fShowDebugOutput("cannot write: %s" % oException);
-      return None;
-    return o0PyFile;
-  
-  @ShowDebugOutput
-  def __fo0OpenZipFileDescendantAsPyFile(oSelf, sPath, bWritable, bThrowErrors):
-    sZipInternalPath = oSelf.fsGetRelativePathTo(
-      sPath,
-      bThrowErrors = bThrowErrors,
-    ).replace("\\", "/");
-    assert sZipInternalPath not in oSelf.__doPyFile_by_sZipInternalPath, \
-        "Cannot open file %s in zip file %s if it is already open!" % (sPath, oSelf.sPath);
-    bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
-    if bMustBeClosed:
-      if not oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors):
-        fShowDebugOutput("zip file cannot be opened");
-        return None;
-    try:
-      bFileExistsInZipFile = sZipInternalPath in oSelf.__doPyZipInfo_by_sZipInternalPath;
-      if bFileExistsInZipFile:
-        sbData = oSelf.__o0PyZipFile.read(sZipInternalPath);
-        oPyFile = BytesIO();
-        oPyFile.write(sbData);
-        oPyFile.seek(0);
-        fShowDebugOutput("opened file for %s in zip file" % ("reading" if not bWritable else "writing"));
-      else:
-        assert bWritable, \
-            "Cannot open file %s in zip file %s for reading if it does not exist!" % (sPath, oSelf.sPath);
-        oPyFile = BytesIO();
-        fShowDebugOutput("created virtual file in zip file");
-      oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath] = oPyFile;
-      oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath] = bWritable;
-      return oPyFile;
-    finally:
-      if bMustBeClosed:
-        assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
-            "Cannot close zip file %s!" % oSelf.sPath;
-    raise AssertionError("Cannot file %s in zip file %s!" % (sPath, oSelf.sPath));
-  
-  @ShowDebugOutput
-  def __fbCloseZipFileDescendantPyFile(oSelf, sPath, oPyFile, bThrowErrors):
-    sZipInternalPath = oSelf.fsGetRelativePathTo(
-      sPath,
-      bThrowErrors = bThrowErrors,
-    ).replace("\\", "/");
-    bWritable = oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath];
-    if bWritable:
-      bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
-      if bMustBeClosed:
-        assert oSelf.fbOpenAsZipFile(bWritable = bWritable, bThrowErrors = bThrowErrors), \
-            "Cannot get files list of zip file %s if it cannot be opened!" % oSelf.sPath;
-      assert sZipInternalPath not in oSelf.__doPyZipInfo_by_sZipInternalPath, \
-          "Cannot create/overwrite existing file %s in zip file %s!" % (sPath, oSelf.sPath);
-      assert sZipInternalPath in oSelf.__doPyFile_by_sZipInternalPath \
-          and sZipInternalPath in oSelf.__dbWritable_by_sZipInternalPath, \
-          "Cannot close file %s in zip file %s if it is not open!" % (sPath, oSelf.sPath);
-      assert oPyFile == oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath], \
-          "Internal inconsistency!";
-      try:
-        # We assume writable files have been modified and need to be saved in the zip file.
-        try:
-          oPyFile.seek(0);
-          sbData = oPyFile.read();
-          fShowDebugOutput("Writing %d bytes (%s) to %s..." % (
-            len(sbData),
-            sbData if len(sbData) < 10 else repr(sbData[:7] + b"..."),
-            sZipInternalPath)
-          );
-          oSelf.__o0PyZipFile.writestr(sZipInternalPath, sbData, zipfile.ZIP_DEFLATED);
-        except:
-          # We want to catch any exceptions related to writing the data here, and
-          # handle them if `bThrowErrors` is False. However, we want to still throw
-          # any unexpected exceptions.
-          raise;
-          if bThrowErrors:
-            raise;
-          return False;
-        oSelf.__doPyZipInfo_by_sZipInternalPath[sZipInternalPath] = \
-            oSelf.__o0PyZipFile.getinfo(sZipInternalPath);
-      finally:
-        if bMustBeClosed:
-          assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
-              "Cannot close zip file %s!" % oSelf.sPath;
-    del oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath];
-    del oSelf.__dbWritable_by_sZipInternalPath[sZipInternalPath];
-    return True;
-  
-  def __fasGetChildNamesOfZipFileDescendant(oSelf, sPath, bThrowErrors):
-    bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
-    if bMustBeClosed:
-      assert oSelf.fbOpenAsZipFile(bThrowErrors = bThrowErrors), \
-          "Cannot get files list of zip file %s if it cannot be opened!" % oSelf.sPath;
-    try:
-      sWantedZipInternalPathHeader = (
-        "" if sPath == oSelf.sPath
-        else oSelf.fsGetRelativePathTo(
-          sPath,
-          bThrowErrors = bThrowErrors,
-        ).replace("\\", "/") + "/"
-      );
-      uMinLength = len(sWantedZipInternalPathHeader); # Used to speed things up
-      asChildNames = [];
-      for sZipInternalPath in oSelf.__doPyZipInfo_by_sZipInternalPath.keys():
-        if len(sZipInternalPath) > uMinLength and sZipInternalPath.startswith(sWantedZipInternalPathHeader):
-          sZipInternalRelativePath = sZipInternalPath[len(sWantedZipInternalPathHeader):];
-          sChildName = sZipInternalRelativePath.split("/", 1)[0];
-          if sChildName not in asChildNames:
-            asChildNames.append(sChildName);
-      return asChildNames;
-    finally:
-      if bMustBeClosed:
-        assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
-            "Cannot close zip file %s!" % oSelf.sPath;
-   
-  def __fu0GetSizeOfZipFileDescendant(oSelf, sPath, bThrowErrors):
-    sZipInternalPath = oSelf.fsGetRelativePathTo(
-      sPath,
-      bThrowErrors = bThrowErrors,
-    ).replace("\\", "/");
-    if oSelf.__dbWritable_by_sZipInternalPath.get(sZipInternalPath):
-      # If it is open for writing, we're always writing at the end of the file.
-      # Since `tell()` returns the offet from the start of the file where writing will happen, it returns the number
-      # of bytes in the file:
-      oPyFile = oSelf.__doPyFile_by_sZipInternalPath[sZipInternalPath];
-      return oPyFile.tell();
-    o0PyZipInfo = oSelf.__fo0GetZipInfoForZipFileDescendant(sPath, bThrowErrors);
-    return o0PyZipInfo.file_size if o0PyZipInfo else None;
-  
-  def __fu0GetCompressedSizeOfZipFileDescendant(oSelf, sPath, bThrowErrors):
-    sZipInternalPath = oSelf.fsGetRelativePathTo(
-      sPath,
-      bThrowErrors = bThrowErrors,
-    ).replace("\\", "/");
-    if oSelf.__dbWritable_by_sZipInternalPath.get(sZipInternalPath):
-      assert not bThrowErrors, \
-          "Cannot get compressed sized of a file that is open for writing; please close it first!";
-      return None;
-    o0PyZipInfo = oSelf.__fo0GetZipInfoForZipFileDescendant(sPath, bThrowErrors);
-    return o0PyZipInfo.compress_size if o0PyZipInfo else None;
-  
-  def __fo0GetZipInfoForZipFileDescendant(oSelf, sPath, bThrowErrors):
-    bMustBeClosed = not oSelf.fbIsOpenAsZipFile(bThrowErrors = bThrowErrors);
-    if bMustBeClosed:
-      assert oSelf.fbOpenAsZipFile(bWritable = False, bThrowErrors = bThrowErrors), \
-          "Cannot check if %s contains a file %s if it cannot be opened!" % (oSelf.sPath, sPath);
-    try:
-      sZipInternalPath = oSelf.fsGetRelativePathTo(
-        sPath,
-        bThrowErrors = bThrowErrors,
-      ).replace("\\", "/");
-      o0PyZipInfo = oSelf.__doPyZipInfo_by_sZipInternalPath.get(sZipInternalPath);
-      if not o0PyZipInfo:
-        assert not bThrowErrors, \
-          "Cannot get information for non-existing file %s in zip file %s!" % (sPath, oSelf.sPath);
-      return o0PyZipInfo;
-    finally:
-      if bMustBeClosed:
-        assert oSelf.fbClose(bThrowErrors = bThrowErrors), \
-            "Cannot close %s" % oSelf.sPath;
-      
+  from .cFileSystemItem_fdoGetCachedPyZipInfo_by_sZipInternalPath \
+      import cFileSystemItem_fdoGetCachedPyZipInfo_by_sZipInternalPath \
+      as __fdoGetCachedPyZipInfo_by_sZipInternalPath;
+  from .cFileSystemItem_fbZipFileContainsDescendant \
+      import cFileSystemItem_fbZipFileContainsDescendant \
+      as __fbZipFileContainsDescendant;
+  from .cFileSystemItem_fbZipFileContainsDescendantFolder \
+      import cFileSystemItem_fbZipFileContainsDescendantFolder \
+      as __fbZipFileContainsDescendantFolder;
+  from .cFileSystemItem_fbZipFileContainsDescendantFile \
+      import cFileSystemItem_fbZipFileContainsDescendantFile \
+      as __fbZipFileContainsDescendantFile;
+  from .cFileSystemItem_fo0CreateZipFileDescendant \
+      import cFileSystemItem_fo0CreateZipFileDescendant \
+      as __fo0CreateZipFileDescendant;
+  from .cFileSystemItem_fo0OpenZipFileDescendantAsPyFile \
+      import cFileSystemItem_fo0OpenZipFileDescendantAsPyFile \
+      as __fo0OpenZipFileDescendantAsPyFile;
+  from .cFileSystemItem_fbCloseZipFileDescendantPyFile \
+      import cFileSystemItem_fbCloseZipFileDescendantPyFile \
+      as __fbCloseZipFileDescendantPyFile;
+  from .cFileSystemItem_fasGetChildNamesOfZipFileDescendant \
+      import cFileSystemItem_fasGetChildNamesOfZipFileDescendant \
+      as __fasGetChildNamesOfZipFileDescendant;
+  from .cFileSystemItem_fu0GetSizeOfZipFileDescendant \
+      import cFileSystemItem_fu0GetSizeOfZipFileDescendant \
+      as __fu0GetSizeOfZipFileDescendant;
+  from .cFileSystemItem_fu0GetCompressedSizeOfZipFileDescendant \
+      import cFileSystemItem_fu0GetCompressedSizeOfZipFileDescendant \
+      as __fu0GetCompressedSizeOfZipFileDescendant;
+  from .cFileSystemItem_fo0GetZipInfoForZipFileDescendant \
+      import cFileSystemItem_fo0GetZipInfoForZipFileDescendant \
+      as __fo0GetZipInfoForZipFileDescendant;
+
   def __repr__(oSelf):
     return "<%s %s #%d>" % (oSelf.__class__.__name__, oSelf, id(oSelf));
   def fsToString(oSelf):
     return "%s{%s#%d}" % (oSelf.__class__.__name__, oSelf.sPath, id(oSelf));
   def __str__(oSelf):
     return oSelf.sPath;
-

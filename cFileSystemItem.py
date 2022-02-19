@@ -616,7 +616,7 @@ class cFileSystemItem(object):
   from .cFileSystemItem_fo0GetZipInfoForZipFileDescendant \
       import cFileSystemItem_fo0GetZipInfoForZipFileDescendant \
       as __fo0GetZipInfoForZipFileDescendant;
-
+  
   def __repr__(oSelf):
     return "<%s %s #%d>" % (oSelf.__class__.__name__, oSelf, id(oSelf));
   def fsToString(oSelf):

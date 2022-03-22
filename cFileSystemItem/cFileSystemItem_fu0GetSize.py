@@ -8,15 +8,7 @@ except ModuleNotFoundError as oException:
   ShowDebugOutput = lambda fx: fx; # NOP
   fShowDebugOutput = lambda x, s0 = None: x; # NOP
 
-def cFileSystemItem_fu0GetSize(oSelf, bParseZipFiles, bThrowErrors, bSanityChecks):
-  if bSanityChecks:
-    pass;
-  if bParseZipFiles:
-    o0ZipRoot = oSelf.fo0GetZipRoot(bThrowErrors = bThrowErrors);
-    if o0ZipRoot:
-      u0Size = o0ZipRoot._cFileSystemItem__fu0GetSizeOfZipFileDescendant(oSelf.sPath, bThrowErrors);
-      fShowDebugOutput("got info from its zip file ancestor %s" % o0ZipRoot.sPath);
-      return u0Size;
+def cFileSystemItem_fu0GetSize(oSelf, bThrowErrors):
   try:
     uSize = os.path.getsize(oSelf.sWindowsPath);
   except Exception as oException:

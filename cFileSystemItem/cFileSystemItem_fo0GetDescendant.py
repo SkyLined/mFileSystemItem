@@ -1,8 +1,6 @@
 import os;
 
-def cFileSystemItem_fo0GetDescendant(oSelf, sDescendantRelativePath, bFixCase, bParseZipFiles, bThrowErrors, bSanityChecks):
-  if bSanityChecks:
-    pass;
+def cFileSystemItem_fo0GetDescendant(oSelf, sDescendantRelativePath, bFixCase, bThrowErrors):
   # Get the first part: up until the folder separator
   sChildName = sDescendantRelativePath.split(os.sep, 1)[0];
   if os.altsep:
@@ -14,7 +12,6 @@ def cFileSystemItem_fo0GetDescendant(oSelf, sDescendantRelativePath, bFixCase, b
   o0Child = oSelf.fo0GetChild(
     sChildName,
     bFixCase = bFixCase,
-    bParseZipFiles = bParseZipFiles,
     bThrowErrors = bThrowErrors,
   );
   if o0Child is None:
@@ -24,7 +21,6 @@ def cFileSystemItem_fo0GetDescendant(oSelf, sDescendantRelativePath, bFixCase, b
     o0Child.fo0GetDescendant(
       sChildDescendantPath,
       bFixCase = bFixCase,
-      bParseZipFiles = bParseZipFiles,
       bThrowErrors = bThrowErrors,
     )
   );

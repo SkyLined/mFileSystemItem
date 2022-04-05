@@ -187,6 +187,13 @@ class cFileSystemItem(object):
     oSelf.__bDOSPathSet = False;
     
   @property
+  def oParent(oSelf):
+    o0Parent = oSelf.o0Parent;
+    assert o0Parent, \
+        "%s has not parent folder!" % oSelf;
+    return o0Parent;
+  
+  @property
   def o0Parent(oSelf):
     if not oSelf.__bParentSet:
       sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");

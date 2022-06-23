@@ -17,6 +17,8 @@ except ModuleNotFoundError as oException:
     raise;
   o0Kernel32DLL = None;
 
+from ..fbIsAbsolutePath import fbIsAbsolutePath;
+from ..fbIsRootPath import fbIsRootPath;
 from ..fs0GetDOSPath import fs0GetDOSPath;
 from ..fsGetNormalizedPath import fsGetNormalizedPath;
 from ..fsGetWindowsPath import fsGetWindowsPath;
@@ -163,12 +165,14 @@ class cFileSystemItem(object):
     assert oSelf.fbIsValidPath(sPath), \
         "%s is not a valid file system item path" % sPath;
     if fbIsProvided(oz0Parent):
-      oSelf.sPath = fsGetNormalizedPath(sPath, sBasePath = oz0Parent.sPath if oz0Parent else None);
-      if oz0Parent is not None:
+      if oz0Parent is not None and not fbIsAbsolutePath(sPath):
+        oSelf.sPath = fsGetNormalizedPath(oz0Parent.sPath, sPath);
         sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");
         assert sParentPath == oz0Parent.sPath, \
             "Cannot create a child (path = %s, normalized = %s, parent = %s) for the given parent (path %s)" % \
             (repr(sPath), repr(oSelf.sPath), repr(sParentPath), repr(oz0Parent.sPath));
+      else:
+        oSelf.sPath = fsGetNormalizedPath(sPath);
       oSelf.__bParentSet = True;
       oSelf.__o0Parent = oz0Parent;
       oSelf.__bRootSet = True;
@@ -196,12 +200,14 @@ class cFileSystemItem(object):
   @property
   def o0Parent(oSelf):
     if not oSelf.__bParentSet:
-      sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");
-      # This will be None for root nodes, where sParentPath == its own path.
-      oSelf.__o0Parent = oSelf.__class__(sParentPath) if sParentPath != oSelf.sPath else None;
-      assert oSelf.__o0Parent is None or sParentPath == oSelf.__o0Parent.sPath, \
-          "Cannot create a parent (path = %s, normalized = %s) for path %s: result is %s" % \
-          (repr(oSelf.sPath + os.sep + ".."), repr(sParentPath), repr(oSelf.sPath), repr(oSelf.__o0Parent.sPath));
+      if fbIsRootPath(oSelf.sPath):
+        oSelf.__o0Parent = None;
+      else:  
+        sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");
+        oSelf.__o0Parent = oSelf.__class__(sParentPath);
+        assert sParentPath == oSelf.__o0Parent.sPath, \
+            "Cannot create a parent (path = %s, normalized = %s) for path %s: result is %s" % \
+            (repr(oSelf.sPath + os.sep + ".."), repr(sParentPath), repr(oSelf.sPath), repr(oSelf.__o0Parent.sPath));
       oSelf.__bParentSet = True;
     return oSelf.__o0Parent;
   
@@ -238,14 +244,14 @@ class cFileSystemItem(object):
       sAbsoluteDescendantPath = sAbsoluteDescendantPath_or_oDescendant.sPath;
     else:
       sAbsoluteDescendantPath = sAbsoluteDescendantPath_or_oDescendant;
-    if (
-      not sAbsoluteDescendantPath.startswith(oSelf.sPath)
-      or sAbsoluteDescendantPath[len(oSelf.sPath):len(oSelf.sPath) + 1] not in [os.sep, os.altsep]
-    ):
+    if not sAbsoluteDescendantPath.startswith(oSelf.sPath):
       assert not bThrowErrors, \
           "Cannot get relative path for %s as it is not a descendant of %s" % (sAbsoluteDescendantPath, oSelf.sPath);
       return None;
-    sRelativePath = sAbsoluteDescendantPath[len(oSelf.sPath) + 1:];
+    if os.name == "nt" and oSelf.sPath[-1:] in (os.sep, os.altsep):
+      sRelativePath = sAbsoluteDescendantPath[len(oSelf.sPath):];
+    else:
+      sRelativePath = sAbsoluteDescendantPath[len(oSelf.sPath) + 1:];
     return sRelativePath;
   
   @property

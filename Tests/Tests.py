@@ -51,12 +51,59 @@ try:
       raise AssertionError("Unknown argument %s" % sArgument);
   
   from mFileSystemItem import cFileSystemItem;
+  from mFileSystemItem.fsGetNormalizedPath import fsGetNormalizedPath;
   if bEnableDebugOutput:
     assert m0DebugOutput, \
         "The 'mDebugOutput' moduke is needed to show debug output.";
     m0DebugOutput.fEnableAllDebugOutput();
     print("*** Debug output enabled.");
-  
+
+  sCWD = os.getcwd();
+  if os.name == "nt":
+    sCurrentDrive = sCWD[:2];
+    for sPath, sNormalizedPath in {
+      "C:\\..": None,
+      "C:\\Path1\\..\\..": None,
+      "CX:\\..": None,
+      sCurrentDrive: sCWD,
+      ("%sX\\.." % sCurrentDrive): sCWD,
+      ("%s.\\Path1" % sCurrentDrive): sCWD + "\\Path1",
+      "C:\\Path1": "C:\\Path1",
+      "C:\\Path1\\": "C:\\Path1",
+      "C:\\Path1\\Path2": "C:\\Path1\\Path2",
+      "C:\\\\Path1\\": "C:\\Path1",
+      "C:\\\\Path1\\\\Path2": "C:\\Path1\\Path2",
+      "C:\\Path1\\.\\Path2": "C:\\Path1\Path2",
+      "C:\\Path1\\..\\Path2": "C:\\Path2",
+      "\\\\?\\C:\Path1": "C:\\Path1",
+      "\\\\Server\\Share": "\\\\Server\\Share",
+      "\\\\Server\\Share\\Path1": "\\\\Server\\Share\\Path1",
+      "\\\\Server\\Share\\Path1\\Path2": "\\\\Server\\Share\\Path1\\Path2",
+      "\\\\?\\Server\\Share\\Path1\\Path2": "\\\\Server\\Share\\Path1\\Path2",
+      "\\\\?\\UNC\\Server\\Share\\Path1\\Path2": "\\\\Server\\Share\\Path1\\Path2",
+    }.items():
+      if sNormalizedPath:
+        assert fsGetNormalizedPath(sPath) == sNormalizedPath, \
+            "fsGetNormalizedPath(%s) == %s (expect %s)" % (
+              repr(sPath),
+              repr(fsGetNormalizedPath(sPath)),
+              repr(sNormalizedPath)
+            );
+        print("+ fsGetNormalizedPath(%s) => %s" % (repr(sPath), repr(sNormalizedPath)));
+      else:
+        try:
+          fsGetNormalizedPath(sPath);
+        except AssertionError as oException:
+          print("+ fsGetNormalizedPath(%s) => %s" % (repr(sPath), repr(oException)));
+        else:
+          assert False, \
+            "fsGetNormalizedPath(%s) == %s (expected exception)" % (
+              repr(sPath),
+              repr(fsGetNormalizedPath(sPath)),
+            );
+
+
+
   oTempFolder = cFileSystemItem(os.getenv("temp"));
   oTempZipFile = oTempFolder.foGetChild("cFileSystemItem test.zip");
   if oTempZipFile.fbExists():

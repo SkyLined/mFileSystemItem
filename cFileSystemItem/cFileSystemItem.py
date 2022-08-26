@@ -270,9 +270,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fuGetSize(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fu0GetSize(bThrowErrors = True);
   @ShowDebugOutput
   def fu0GetSize(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fu0GetSize(bThrowErrors);
   from .cFileSystemItem_fu0GetSize \
       import cFileSystemItem_fu0GetSize \
@@ -323,9 +325,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fCreateAsFolder(oSelf, bCreateParents = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbCreateAsFolder(bCreateParents, bThrowErrors = True);
   @ShowDebugOutput
   def fbCreateAsFolder(oSelf, bCreateParents = False, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbCreateAsFolder(bCreateParents, bThrowErrors);
   from .cFileSystemItem_fbCreateAsFolder \
       import cFileSystemItem_fbCreateAsFolder \
@@ -333,16 +337,20 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fCreateAsParent(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbCreateAsParent(bCreateParents = True, bThrowErrors = True);
   @ShowDebugOutput
   def fbCreateAsParent(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbCreateAsFolder(bCreateParents = True, bThrowErrors = bThrowErrors);
   
   @ShowDebugOutput
   def faoGetChildren(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fa0oGetChildren(bThrowErrors = True);
   @ShowDebugOutput
   def fa0oGetChildren(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fa0oGetChildren(bThrowErrors);
   from .cFileSystemItem_fa0oGetChildren \
       import cFileSystemItem_fa0oGetChildren \
@@ -350,9 +358,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def foGetChild(oSelf, sChildName, bFixCase = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fo0GetChild(sChildName, bFixCase, bThrowErrors = True);
   @ShowDebugOutput
   def fo0GetChild(oSelf, sChildName, bFixCase = False, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fo0GetChild(sChildName, bFixCase, bThrowErrors);
   from .cFileSystemItem_fo0GetChild \
       import cFileSystemItem_fo0GetChild \
@@ -360,9 +370,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def faoGetDescendants(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fa0oGetDescendants(bThrowErrors = True);
   @ShowDebugOutput
   def fa0oGetDescendants(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fa0oGetDescendants(bThrowErrors);
   from .cFileSystemItem_fa0oGetDescendants \
       import cFileSystemItem_fa0oGetDescendants \
@@ -370,9 +382,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def foGetDescendant(oSelf, sDescendantRelativePath, bFixCase = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fo0GetDescendant(sDescendantRelativePath, bFixCase, bThrowErrors = True);
   @ShowDebugOutput
   def fo0GetDescendant(oSelf, sDescendantRelativePath, bFixCase = False, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fo0GetDescendant(sDescendantRelativePath, bFixCase, bThrowErrors);
   from .cFileSystemItem_fo0GetDescendant \
       import cFileSystemItem_fo0GetDescendant \
@@ -380,9 +394,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fSetAsCurrentWorkingDirectory(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbSetAsCurrentWorkingDirectory(bThrowErrors = True);
   @ShowDebugOutput
   def fbSetAsCurrentWorkingDirectory(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbSetAsCurrentWorkingDirectory(bThrowErrors);
   from .cFileSystemItem_fbSetAsCurrentWorkingDirectory \
       import cFileSystemItem_fbSetAsCurrentWorkingDirectory \
@@ -390,10 +406,12 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fCreateAsFile(oSelf, sbData = b"", bCreateParents = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     fAssertType("sbData", sbData, bytes);
     assert oSelf.__fbCreateAsFile(sbData, bCreateParents, bThrowErrors = True);
   @ShowDebugOutput
   def fbCreateAsFile(oSelf, sbData = b"", bCreateParents = False, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     fAssertType("sbData", sbData, bytes);
     return oSelf.__fbCreateAsFile(sbData, bCreateParents, bThrowErrors);
   from .cFileSystemItem_fbCreateAsFile \
@@ -402,9 +420,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fsbRead(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fsb0Read(bThrowErrors = True);
   @ShowDebugOutput
   def fsb0Read(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fsb0Read(bThrowErrors);
   from .cFileSystemItem_fsb0Read \
       import cFileSystemItem_fsb0Read \
@@ -412,10 +432,12 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fWrite(oSelf, sbData, bAppend = False, bCreateParents = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     fAssertType("sbData", sbData, bytes);
     assert oSelf.__fbWrite(sbData, bAppend, bCreateParents, bThrowErrors = True);
   @ShowDebugOutput
   def fbWrite(oSelf, sbData, bAppend = False, bCreateParents = False, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     fAssertType("sbData", sbData, bytes);
     return oSelf.__fbWrite(sbData, bAppend, bCreateParents, bThrowErrors);
   from .cFileSystemItem_fbWrite \
@@ -424,9 +446,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def foOpen(oSelf, bWritable = False, bAppend = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fo0Open(bWritable, bAppend, bThrowErrors = True);
   @ShowDebugOutput
   def fo0Open(oSelf, bWritable = False, bAppend = False, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fo0Open(bWritable, bAppend, bThrowErrors);
   from .cFileSystemItem_fo0Open \
       import cFileSystemItem_fo0Open \
@@ -434,9 +458,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fClose(oSelf, oPyFile):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbClose(oPyFile, bThrowErrors = True);
   @ShowDebugOutput
   def fbClose(oSelf, bWritable = False, bAppend = False, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbClose(oPyFile, bThrowErrors = bThrowErrors);
   from .cFileSystemItem_fbClose \
       import cFileSystemItem_fbClose \
@@ -444,9 +470,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fRename(oSelf, sNewName):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbRename(sNewName, bThrowErrors = True);
   @ShowDebugOutput
   def fbRename(oSelf, sNewName, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbRename(sNewName, bThrowErrors);
   from .cFileSystemItem_fbRename \
       import cFileSystemItem_fbRename \
@@ -454,9 +482,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fMove(oSelf, oNewItem):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbMove(oNewItem, bThrowErrors = True);
   @ShowDebugOutput
   def fbMove(oSelf, oNewItem, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbMove(oNewItem, bThrowErrors);
   from .cFileSystemItem_fbMove \
       import cFileSystemItem_fbMove \
@@ -464,9 +494,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fDeleteDescendants(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbDeleteDescendants(bThrowErrors = True);
   @ShowDebugOutput
   def fbDeleteDescendants(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbDeleteDescendants(bThrowErrors);
   from .cFileSystemItem_fbDeleteDescendants \
       import cFileSystemItem_fbDeleteDescendants \
@@ -474,9 +506,11 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def fDelete(oSelf):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbDelete(bThrowErrors = True);
   @ShowDebugOutput
   def fbDelete(oSelf, bThrowErrors = False):
+    mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbDelete(bThrowErrors);
   from .cFileSystemItem_fbDelete \
       import cFileSystemItem_fbDelete \

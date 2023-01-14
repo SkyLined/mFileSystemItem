@@ -6,7 +6,7 @@ bDebugOutput = False;
 
 def fsJoinPathSections(*tsPathSections):
   sPath = os.path.join(*tsPathSections);
-  if sPath.endswith(os.sep) and (
+  if len(sPath) > 1 and sPath.endswith(os.sep) and (
     not bWindowsOS or len(sPath) != 3 or sPath[1] != ":"
   ): # remove trailing slash except for "X:\\"
     return sPath[:-1];
@@ -122,18 +122,19 @@ def fsGetNormalizedPath(sPath = sCWD, s0RelativePath = None):
       print("    Addition:  %s" % sNormalizedPathAddition);
       print("  * Normalized:  %s" % sNormalizedPath);
     return sNormalizedPath;
-  
-  if sPath.startswith(os.sep):
-    sNormalizedPath = fsNormalizePathSection(sPath[1:]);
+  else:
+    # Non-windows OS.
+    if sPath.startswith(os.sep):
+      sNormalizedPath = os.sep + fsNormalizePathSection(sPath[1:]);
+      if bDebugOutput:
+        print("  => ABS PATH");
+        print("    Path:      %s" % sNormalizedPath);
+        print("    Addition:  %s" % sNormalizedPathAddition);
+      return fsJoinPathSections(sNormalizedPath, sNormalizedPathAddition);
+    sNormalizedPath = fsNormalizePathSection(sPath);
     if bDebugOutput:
-      print("  => ABS PATH");
+      print("  => REL PATH");
+      print("    CWD:     %s" % sCWD);
       print("    Path:      %s" % sNormalizedPath);
       print("    Addition:  %s" % sNormalizedPathAddition);
-    return fsJoinPathSections(os.sep, sCWD, sNormalizedPath, sNormalizedPathAddition);
-  sNormalizedPath = fsNormalizePathSection(sPath);
-  if bDebugOutput:
-    print("  => REL PATH");
-    print("    CWD:     %s" % sCWD);
-    print("    Path:      %s" % sNormalizedPath);
-    print("    Addition:  %s" % sNormalizedPathAddition);
-  return fsJoinPathSections(sCWD, sNormalizedPath, sNormalizedPathAddition);
+    return fsJoinPathSections(sCWD, sNormalizedPath, sNormalizedPathAddition);

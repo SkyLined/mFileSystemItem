@@ -28,6 +28,6 @@ def fbIsRootPath(sPath):
   if os.name == "nt":
     if rRootUNCPath.match(sPath) or rRootDriveLetter.match(sPath):
       return True;
-  elif sPath[:1] == os.sep:
+  elif sPath == os.sep:
     return True;
   return False;

@@ -14,19 +14,15 @@ def fsJoinPathSections(*tsPathSections):
 
 def fsNormalizePathSection(sPathSection):
   if sPathSection == "": return sPathSection;
-  assert ":" not in sPathSection, \
-    "Path section %s is invalid" % repr(sPathSection);
+  if ":" in sPathSection:
+    raise ValueError("%s is not a valid path section (it contains ':')" % repr(sPathSection));
   sNormalizedPathSection = os.path.normpath(sPathSection);
   if sNormalizedPathSection == ".":
     return "";
-  assert (
-    not sNormalizedPathSection.startswith(os.sep)
-    and not sNormalizedPathSection.startswith("..")
-  ), \
-      "Path section %s is normalized as %s, which indicates %s" % (
-        sPathSection, sNormalizedPathSection,
-        "an absolute path" if sNormalizedPathSection.startswith(os.sep) else "directory traversal",
-      );
+  if sNormalizedPathSection.startswith(os.sep):
+    raise ValueError("%s is not a valid path section (it appears to be an absolute path)" % repr(sPathSection));
+  if sNormalizedPathSection == ".." or sNormalizedPathSection.startswith(".." + os.sep):
+    raise ValueError("%s is not a valid path section (it appears to be an attempt at directory traversal)" % repr(sPathSection));
   return sNormalizedPathSection;
 
 rUNCPath = re.compile(
@@ -78,9 +74,11 @@ def fsGetNormalizedPath(sPath = sCWD, s0RelativePath = None):
         print("    Addition:  %s" % sNormalizedPathAddition);
       return "\\\\%s" % fsJoinPathSections(sServerName, sShareName, sNormalizedPathInShare, sNormalizedPathAddition);
     # Check for drive letter and path:
-    oDriveLetterAndPathMatch = rDriveLetterAndPath.match(sPath)
-    if oDriveLetterAndPathMatch:
-      sDrive, sAbsolute, sPathOnDrive  = oDriveLetterAndPathMatch.groups();
+    if ":" in sPath:
+      o0DriveLetterAndPathMatch = rDriveLetterAndPath.match(sPath);
+      if o0DriveLetterAndPathMatch is None:
+        raise ValueError("%s is not a valid path" % repr(sPath));
+      sDrive, sAbsolute, sPathOnDrive = o0DriveLetterAndPathMatch.groups();
       sNormalizedPathOnDrive = fsNormalizePathSection(sPathOnDrive);
       if sAbsolute:
         sNormalizedPath = fsJoinPathSections(sDrive + "\\", sNormalizedPathOnDrive, sNormalizedPathAddition);
@@ -113,8 +111,7 @@ def fsGetNormalizedPath(sPath = sCWD, s0RelativePath = None):
         print("    Addition:  %s" % sNormalizedPathAddition);
         print("  * Normalized:  %s" % sNormalizedPath);
       return sNormalizedPath;
-    sNormalizedRelativePath = fsNormalizePathSection(sPath);
-    sNormalizedPath = fsJoinPathSections(sCWD, sNormalizedRelativePath, sNormalizedPathAddition);
+    sNormalizedPath = os.path.normpath(fsJoinPathSections(sCWD, sPath, sNormalizedPathAddition));
     if bDebugOutput:
       print("  => REL PATH");
       print("    CWD:     %s" % sCWD);

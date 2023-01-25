@@ -94,11 +94,11 @@ try:
       else:
         try:
           fsGetNormalizedPath(sPath);
-        except AssertionError as oException:
+        except ValueError as oException:
           print("+ fsGetNormalizedPath(%s) => %s" % (repr(sPath), repr(oException)));
         else:
           assert False, \
-            "fsGetNormalizedPath(%s) == %s (expected exception)" % (
+            "fsGetNormalizedPath(%s) == %s (expected ValueError)" % (
               repr(sPath),
               repr(fsGetNormalizedPath(sPath)),
             );

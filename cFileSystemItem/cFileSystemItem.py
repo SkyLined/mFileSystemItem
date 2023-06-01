@@ -8,7 +8,10 @@ except ModuleNotFoundError as oException:
   ShowDebugOutput = lambda fx: fx; # NOP
   fShowDebugOutput = lambda x, s0 = None: x; # NOP
 
-from mNotProvided import *;
+from mNotProvided import \
+    fAssertType, \
+    fbIsProvided, \
+    zNotProvided;
 try:
   from mWindowsSDK.mKernel32 import oKernel32DLL as o0Kernel32DLL;
   from mWindowsSDK import LPCWSTR, FILE_ATTRIBUTE_HIDDEN, FILE_ATTRIBUTE_READONLY, DWORD;
@@ -134,6 +137,7 @@ class cFileSystemItem(object):
     ]);
   @classmethod
   def fbIsValidPath(cClass, sPath):
+    fAssertType("sPath", sPath, str);
     if os.altsep:
       sPath = sPath.replace(os.altsep, os.sep);
     if sPath.startswith("\\\\?\\"):
@@ -162,6 +166,7 @@ class cFileSystemItem(object):
   
   @ShowDebugOutput
   def __init__(oSelf, sPath, oz0Parent = zNotProvided):
+    fAssertType("sPath", sPath, str);
     assert oSelf.fbIsValidPath(sPath), \
         "%s is not a valid file system item path" % sPath;
     if fbIsProvided(oz0Parent):
@@ -461,7 +466,7 @@ class cFileSystemItem(object):
     mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     assert oSelf.__fbClose(oPyFile, bThrowErrors = True);
   @ShowDebugOutput
-  def fbClose(oSelf, bWritable = False, bAppend = False, bThrowErrors = False):
+  def fbClose(oSelf, oPyFile, bThrowErrors = False):
     mDebugOutput_HideInCallStack = True; # Hide this helper function in the call stack.
     return oSelf.__fbClose(oPyFile, bThrowErrors = bThrowErrors);
   from .cFileSystemItem_fbClose \

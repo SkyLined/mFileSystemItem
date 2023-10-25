@@ -27,7 +27,6 @@ def cFileSystemItem_fbCreateAsFile(oSelf, sbData, bCreateParents, bThrowErrors):
       return False;
     if not oSelf.o0Parent.fbCreateAsParent(bThrowErrors = bThrowErrors):
       return False;
-  oSelf._cFileSystemItem__fRemoveAccessLimitingAttributesBeforeOperation(bMustBeWritable = True);
   try:
     with open(oSelf.sWindowsPath, "wb") as oPyFile:
       oPyFile.write(sbData);
@@ -38,5 +37,3 @@ def cFileSystemItem_fbCreateAsFile(oSelf, sbData, bCreateParents, bThrowErrors):
     return False;
   else:
     return True;
-  finally:
-    oSelf._cFileSystemItem__fReapplyAccessLimitingAttributesAfterOperation();

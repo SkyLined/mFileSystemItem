@@ -167,10 +167,12 @@ class cFileSystemItem(object):
   @ShowDebugOutput
   def __init__(oSelf, sPath, oz0Parent = zNotProvided):
     fAssertType("sPath", sPath, str);
-    assert oSelf.fbIsValidPath(sPath), \
-        "%s is not a valid file system item path" % sPath;
+    if not oSelf.fbIsValidPath(sPath):
+      raise ValueError("%s is not a valid file system item path" % sPath);
     if fbIsProvided(oz0Parent):
       if oz0Parent is not None and not fbIsAbsolutePath(sPath):
+        if not isinstance(oz0Parent, cFileSystemItem):
+          raise ValueError("%s is not a cFileSystemItem" % oz0Parent);
         oSelf.sPath = fsGetNormalizedPath(oz0Parent.sPath, sPath);
         sParentPath = fsGetNormalizedPath(oSelf.sPath + os.sep + "..");
         assert sParentPath == oz0Parent.sPath, \

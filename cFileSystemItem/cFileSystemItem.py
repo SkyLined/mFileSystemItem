@@ -109,8 +109,8 @@ gdsInvalidPathCharacterUnicodeHomographTranslationMap = {
   ">":     "〉", # RIGHT ANGLE BRACKET
   "\\":    "⧹", # BIG REVERSE SOLIDUS
   "/":     "⧸", # BIG SOLIDUS
-  "?":     "❓", # BLACK QUESTION MARK ORNAMENT
-  "*":     "✱", # HEAVY ASTERISK
+  "?":     "？", # FULLWIDTH QUESTION MARK
+  "*":     "∗", # ASTERISK OPERATOR
   ":":     "։", # ARMENIAN FULL STOP
   "|":     "ǀ", # LATIN LETTER DENTAL CLICK
 };

@@ -23,11 +23,11 @@ def cFileSystemItem_fo0GetChild(oSelf, sChildName, bFixCase, bThrowErrors):
           sChildName = sRealChildName;
           break;
   oChild = oSelf.__class__(oSelf.sPath + os.sep + sChildName, oSelf);
-  assert oSelf.fsGetRelativePathTo(oChild, bThrowErrors = False) == sChildName, \
+  assert oSelf.fs0GetRelativePathTo(oChild, bThrowErrors = False) == sChildName, \
       "Creating a child %s of %s resulted in a child %s that has relative path %s!" % (
         sChildName,
         oSelf.sPath,
         oChild.sPath,
-        oSelf.fsGetRelativePathTo(oChild, bThrowErrors = False),
+        oSelf.fs0GetRelativePathTo(oChild, bThrowErrors = False),
       );
   return oChild;

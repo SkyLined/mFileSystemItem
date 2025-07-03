@@ -246,7 +246,7 @@ class cFileSystemItem(object):
       o0Kernel32DLL.SetFileAttributesW(LPCWSTR(oSelf.sWindowsPath), DWORD(uFlags));
   
   @ShowDebugOutput
-  def fsGetRelativePathTo(oSelf, sAbsoluteDescendantPath_or_oDescendant, bThrowErrors = False):
+  def fs0GetRelativePathTo(oSelf, sAbsoluteDescendantPath_or_oDescendant, bThrowErrors = False):
     if isinstance(sAbsoluteDescendantPath_or_oDescendant, cFileSystemItem):
       sAbsoluteDescendantPath = sAbsoluteDescendantPath_or_oDescendant.sPath;
     else:

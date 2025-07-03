@@ -10,3 +10,5 @@ Internal error reports/*
 releases
 Tests/tmp/
 Tests/Reports/
+# This has been waiting for love and attention so long, I've given up for now:
+cZipFileSystemItem
